@@ -1,5 +1,6 @@
 using ItemFinder.Application;
 using ItemFinder.ConsoleApp;
+using ItemFinder.ConsoleApp.Configuration;
 using ItemFinder.Infrastructure;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -10,9 +11,8 @@ using var services = new ServiceCollection()
     .AddSingleton<ItemDirectoryLoader>()
     .BuildServiceProvider();
 
-var dataFilePath = args.Length > 0
-    ? args[0]
-    : Path.Combine(AppContext.BaseDirectory, "Data.txt");
+var dataFilePath = DataFilePathResolver.Resolve(
+    args, Environment.GetEnvironmentVariable, AppContext.BaseDirectory);
 
 var app = new ItemFinderApp(
     services.GetRequiredService<IConsole>(),

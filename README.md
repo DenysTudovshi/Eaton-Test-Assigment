@@ -42,6 +42,9 @@ The bundled `Data.txt` is used by default. To use another file, pass its path:
 dotnet run --project src/ItemFinder.ConsoleApp -- path/to/MyData.txt
 ```
 
+The `ITEMFINDER_DATA_FILE` environment variable also sets the path; a CLI
+argument wins over it when both are given.
+
 Run the tests:
 
 ```
@@ -60,6 +63,12 @@ mount it and pass its path:
 
 ```
 docker run -it --rm -v "$(pwd)/data:/data:ro" item-finder /data/Data-medium.txt
+```
+
+or point the environment variable at it:
+
+```
+docker run -it --rm -v "$(pwd)/data:/data:ro" -e ITEMFINDER_DATA_FILE=/data/Data-medium.txt item-finder
 ```
 
 ## The data file
