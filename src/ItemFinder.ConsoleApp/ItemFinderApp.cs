@@ -7,6 +7,19 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
 {
     public int Run()
     {
+        try
+        {
+            return RunCore();
+        }
+        catch (Exception)
+        {
+            console.WriteLine("Something went wrong and the application had to stop. Please check the data file and try again.");
+            return 1;
+        }
+    }
+
+    private int RunCore()
+    {
         var result = parser.ParseFile(dataFilePath);
         if (!result.Success)
         {
