@@ -19,7 +19,7 @@ public class DataFileParserHappyPathTests
         var directory = new ItemDirectory(result.Forest!);
         Assert.Equal(
             ["Coffee Mug", "Cookies", "Milk", "Mobile Phone", "Pencils"],
-            directory.AvailableItems);
+            directory.Items.Select(item => item.Name));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class DataFileParserHappyPathTests
                 "Travel Backpack",
                 "Work Gloves",
             ],
-            directory.AvailableItems);
+            directory.Items.Select(item => item.Name));
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class DataFileParserHappyPathTests
 
         Assert.True(result.Success, string.Join("; ", result.Errors.Select(e => e.Message)));
         var directory = new ItemDirectory(result.Forest!);
-        Assert.Equal(["Book", "Marble"], directory.AvailableItems);
+        Assert.Equal(["Book", "Marble"], directory.Items.Select(item => item.Name));
         Assert.Equal(["Enter the room.", "Open the box."], directory.GetDirections("Marble"));
     }
 
@@ -138,7 +138,7 @@ public class DataFileParserHappyPathTests
 
         Assert.True(result.Success, string.Join("; ", result.Errors.Select(e => e.Message)));
         var directory = new ItemDirectory(result.Forest!);
-        Assert.Equal(["Badge", "Keys"], directory.AvailableItems);
+        Assert.Equal(["Badge", "Keys"], directory.Items.Select(item => item.Name));
         Assert.Equal(["Enter building B.", "Check the locker."], directory.GetDirections("Badge"));
     }
 }

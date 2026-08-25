@@ -9,19 +9,19 @@ public sealed class ItemDirectory
 
     public ItemDirectory(DirectionForest forest)
     {
+        Items = forest.EnumerateItems()
+            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         _directionsByName = [];
-        foreach (var item in forest.EnumerateItems())
+        foreach (var item in Items)
         {
             _directionsByName[item.Name] = item.Directions;
         }
-
-        AvailableItems = _directionsByName.Keys
-            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
     }
 
-    /// <summary>Item names in alphabetical order (case-insensitive).</summary>
-    public IReadOnlyList<string> AvailableItems { get; }
+    /// <summary>Every item with its directions, alphabetical by name (case-insensitive).</summary>
+    public IReadOnlyList<LocatedItem> Items { get; }
 
     /// <summary>The direction steps to <paramref name="itemName"/>, or null when no such item exists.</summary>
     public IReadOnlyList<string>? GetDirections(string itemName) =>

@@ -6,29 +6,39 @@ namespace ItemFinder.Application.Tests;
 public class ItemDirectoryTests
 {
     [Fact]
-    public void AvailableItems_AreSortedAlphabetically()
+    public void Items_AreSortedAlphabetically()
     {
         var directory = new ItemDirectory(ForestWithItems("Pencils", "Cookies", "Milk", "Mobile Phone", "Coffee Mug"));
 
         Assert.Equal(
             ["Coffee Mug", "Cookies", "Milk", "Mobile Phone", "Pencils"],
-            directory.AvailableItems);
+            directory.Items.Select(item => item.Name));
     }
 
     [Fact]
-    public void AvailableItems_SortIsCaseInsensitive()
+    public void Items_SortIsCaseInsensitive()
     {
         var directory = new ItemDirectory(ForestWithItems("cherry", "Apple", "banana"));
 
-        Assert.Equal(["Apple", "banana", "cherry"], directory.AvailableItems);
+        Assert.Equal(["Apple", "banana", "cherry"], directory.Items.Select(item => item.Name));
     }
 
     [Fact]
-    public void AvailableItems_EmptyForest_IsEmpty()
+    public void Items_EmptyForest_IsEmpty()
     {
         var directory = new ItemDirectory(new DirectionForest([]));
 
-        Assert.Empty(directory.AvailableItems);
+        Assert.Empty(directory.Items);
+    }
+
+    [Fact]
+    public void Items_CarryTheirDirections()
+    {
+        var directory = new ItemDirectory(ForestWithItems("Cookies"));
+
+        var item = Assert.Single(directory.Items);
+        Assert.Equal("Cookies", item.Name);
+        Assert.Equal(["Walk in.", "Approach the Cookies."], item.Directions);
     }
 
     [Fact]

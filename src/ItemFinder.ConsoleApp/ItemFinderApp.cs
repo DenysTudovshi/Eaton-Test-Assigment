@@ -1,4 +1,5 @@
 using ItemFinder.Application;
+using ItemFinder.Domain;
 
 namespace ItemFinder.ConsoleApp;
 
@@ -31,7 +32,7 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
             return 1;
         }
 
-        var directory = new ItemDirectory(result.Forest!);
+        var directory = new ItemDirectory(result.Forest);
 
         while (true)
         {
@@ -53,9 +54,9 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
 
                 if (int.TryParse(trimmed, out var selection)
                     && selection >= 1
-                    && selection <= directory.AvailableItems.Count)
+                    && selection <= directory.Items.Count)
                 {
-                    PrintDirections(directory, directory.AvailableItems[selection - 1]);
+                    PrintDirections(directory.Items[selection - 1]);
                     console.WriteLine("Press Enter to continue...");
                     if (console.ReadLine() is null)
                     {
@@ -66,15 +67,15 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
                 }
 
                 console.WriteLine(
-                    $"Please enter a number between 1 and {directory.AvailableItems.Count}, or 'q' to quit.");
+                    $"Please enter a number between 1 and {directory.Items.Count}, or 'q' to quit.");
             }
         }
     }
 
-    private void PrintDirections(ItemDirectory directory, string itemName)
+    private void PrintDirections(LocatedItem item)
     {
         console.WriteLine();
-        foreach (var step in directory.GetDirections(itemName)!)
+        foreach (var step in item.Directions)
         {
             console.WriteLine(step);
         }
@@ -86,9 +87,9 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
     {
         console.WriteLine("Available items:");
         console.WriteLine();
-        for (var i = 0; i < directory.AvailableItems.Count; i++)
+        for (var i = 0; i < directory.Items.Count; i++)
         {
-            console.WriteLine($"[{i + 1}] - {directory.AvailableItems[i]}");
+            console.WriteLine($"[{i + 1}] - {directory.Items[i].Name}");
         }
 
         console.WriteLine();

@@ -77,8 +77,8 @@ public class DataFileParserStructureTests
 
         Assert.True(fromCrlf.Success);
         Assert.Equal(
-            new ItemDirectory(fromLf.Forest!).AvailableItems,
-            new ItemDirectory(fromCrlf.Forest!).AvailableItems);
+            new ItemDirectory(fromLf.Forest!).Items.Select(item => (item.Name, string.Join("/", item.Directions))),
+            new ItemDirectory(fromCrlf.Forest!).Items.Select(item => (item.Name, string.Join("/", item.Directions))));
     }
 
     [Fact]
@@ -114,6 +114,6 @@ public class DataFileParserStructureTests
         var result = _parser.ParseText(text);
 
         Assert.True(result.Success);
-        Assert.Equal(["Pencils"], new ItemDirectory(result.Forest!).AvailableItems);
+        Assert.Equal(["Pencils"], new ItemDirectory(result.Forest!).Items.Select(item => item.Name));
     }
 }

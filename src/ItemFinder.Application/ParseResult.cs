@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using ItemFinder.Domain;
 
 namespace ItemFinder.Application;
@@ -15,6 +17,7 @@ public sealed class ParseResult
 
     public IReadOnlyList<ParseError> Errors { get; }
 
+    [MemberNotNullWhen(true, nameof(Forest))]
     public bool Success => Forest is not null;
 
     public static ParseResult Ok(DirectionForest forest) => new(forest, []);
