@@ -1,4 +1,5 @@
-using ItemFinder.Domain;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
 namespace ItemFinder.Domain.Tests;
 

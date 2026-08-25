@@ -1,4 +1,4 @@
-namespace ItemFinder.Application;
+namespace ItemFinder.Application.Enums;
 
 /// <summary>Machine-readable category of a parse error, independent of the message wording.</summary>
 public enum ParseErrorKind

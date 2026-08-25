@@ -1,4 +1,4 @@
-namespace ItemFinder.Domain;
+namespace ItemFinder.Domain.Entities;
 
 /// <summary>A direction step that may contain further steps or items beneath it.</summary>
 public sealed class DirectionNode(string text) : Node

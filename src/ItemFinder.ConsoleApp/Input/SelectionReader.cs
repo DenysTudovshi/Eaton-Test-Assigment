@@ -1,3 +1,4 @@
+using ItemFinder.ConsoleApp.IO;
 namespace ItemFinder.ConsoleApp.Input;
 
 /// <summary>Reads and validates user input for the selection flow.</summary>

@@ -1,4 +1,4 @@
-namespace ItemFinder.ConsoleApp;
+namespace ItemFinder.ConsoleApp.IO;
 
 /// <summary>The real console; the only place that touches System.Console.</summary>
 public sealed class SystemConsole : IConsole

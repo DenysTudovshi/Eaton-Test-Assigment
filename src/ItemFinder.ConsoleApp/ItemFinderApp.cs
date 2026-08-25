@@ -1,6 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 
-using ItemFinder.Application;
+using ItemFinder.Application.Enums;
+using ItemFinder.Application.Interfaces;
+using ItemFinder.Application.Results;
+using ItemFinder.Application.Services;
 using ItemFinder.ConsoleApp.Input;
 using ItemFinder.ConsoleApp.Views;
 

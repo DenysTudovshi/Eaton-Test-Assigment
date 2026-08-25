@@ -1,7 +1,10 @@
 using System.Text;
 
-using ItemFinder.Application;
-using ItemFinder.Infrastructure;
+using ItemFinder.Application.Enums;
+using ItemFinder.Application.Interfaces;
+using ItemFinder.Application.Results;
+using ItemFinder.Application.Services;
+using ItemFinder.Infrastructure.Parsing;
 
 namespace ItemFinder.Infrastructure.Tests;
 

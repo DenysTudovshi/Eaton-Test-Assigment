@@ -1,7 +1,11 @@
-using ItemFinder.Application;
-using ItemFinder.Domain;
+using ItemFinder.Application.Enums;
+using ItemFinder.Application.Interfaces;
+using ItemFinder.Application.Results;
+using ItemFinder.Application.Services;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
-namespace ItemFinder.Infrastructure;
+namespace ItemFinder.Infrastructure.Parsing;
 
 /// <summary>
 /// Parses the hierarchical data file format: a root direction per "+ " line, and

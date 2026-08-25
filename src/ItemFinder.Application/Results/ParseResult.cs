@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 
-using ItemFinder.Domain;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
-namespace ItemFinder.Application;
+namespace ItemFinder.Application.Results;
 
 /// <summary>Outcome of parsing a data file: either a forest or one or more errors, never both.</summary>
 public sealed class ParseResult

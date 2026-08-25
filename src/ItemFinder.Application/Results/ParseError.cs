@@ -1,4 +1,6 @@
-namespace ItemFinder.Application;
+using ItemFinder.Application.Enums;
+
+namespace ItemFinder.Application.Results;
 
 /// <summary>A single problem found while parsing a data file.</summary>
 /// <param name="Kind">Machine-readable category, for callers that branch on the error rather than display it.</param>

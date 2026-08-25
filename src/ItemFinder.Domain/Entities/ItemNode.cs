@@ -1,4 +1,4 @@
-namespace ItemFinder.Domain;
+namespace ItemFinder.Domain.Entities;
 
 /// <summary>A findable item; always a leaf of the hierarchy.</summary>
 public sealed class ItemNode(string name) : Node

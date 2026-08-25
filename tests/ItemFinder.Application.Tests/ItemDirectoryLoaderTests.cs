@@ -1,5 +1,9 @@
-using ItemFinder.Application;
-using ItemFinder.Domain;
+using ItemFinder.Application.Enums;
+using ItemFinder.Application.Interfaces;
+using ItemFinder.Application.Results;
+using ItemFinder.Application.Services;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
 namespace ItemFinder.Application.Tests;
 

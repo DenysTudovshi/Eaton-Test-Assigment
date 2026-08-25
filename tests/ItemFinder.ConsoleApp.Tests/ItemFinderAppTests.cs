@@ -1,5 +1,9 @@
-using ItemFinder.Application;
+using ItemFinder.Application.Enums;
+using ItemFinder.Application.Interfaces;
+using ItemFinder.Application.Results;
+using ItemFinder.Application.Services;
 using ItemFinder.ConsoleApp;
+using ItemFinder.ConsoleApp.IO;
 
 namespace ItemFinder.ConsoleApp.Tests;
 

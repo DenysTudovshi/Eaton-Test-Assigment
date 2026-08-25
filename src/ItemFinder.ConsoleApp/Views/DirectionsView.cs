@@ -1,4 +1,6 @@
-using ItemFinder.Domain;
+using ItemFinder.ConsoleApp.IO;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
 namespace ItemFinder.ConsoleApp.Views;
 

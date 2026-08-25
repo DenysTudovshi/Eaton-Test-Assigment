@@ -1,6 +1,7 @@
-using ItemFinder.Domain;
+using ItemFinder.Domain.Entities;
+using ItemFinder.Domain.ValueObjects;
 
-namespace ItemFinder.Application;
+namespace ItemFinder.Application.Services;
 
 /// <summary>Lookup over a parsed forest: the alphabetical item list and per-item directions.</summary>
 public sealed class ItemDirectory

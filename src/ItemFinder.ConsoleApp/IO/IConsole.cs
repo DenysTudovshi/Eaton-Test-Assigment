@@ -1,4 +1,4 @@
-namespace ItemFinder.ConsoleApp;
+namespace ItemFinder.ConsoleApp.IO;
 
 /// <summary>Console boundary, abstracted so the interaction flow is testable.</summary>
 public interface IConsole

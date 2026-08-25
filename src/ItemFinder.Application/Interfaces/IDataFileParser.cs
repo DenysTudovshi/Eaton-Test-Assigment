@@ -1,4 +1,6 @@
-namespace ItemFinder.Application;
+using ItemFinder.Application.Results;
+
+namespace ItemFinder.Application.Interfaces;
 
 /// <summary>Parses the hierarchical data file format into a direction forest.</summary>
 public interface IDataFileParser

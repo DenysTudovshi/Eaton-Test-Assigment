@@ -1,4 +1,6 @@
-namespace ItemFinder.Domain;
+using ItemFinder.Domain.ValueObjects;
+
+namespace ItemFinder.Domain.Entities;
 
 /// <summary>The parsed data file: one or more root directions and everything beneath them.</summary>
 public sealed class DirectionForest(IEnumerable<DirectionNode> roots)
