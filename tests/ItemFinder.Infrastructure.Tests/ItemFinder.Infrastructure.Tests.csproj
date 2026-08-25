@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\src\ItemFinder.Infrastructure\ItemFinder.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\data\*.txt" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
