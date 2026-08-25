@@ -51,7 +51,8 @@ public sealed class DataFileParser : IDataFileParser
 
             if (line.Length == 0)
             {
-                return Invalid(lineNumber);
+                return ParseResult.Failed(new ParseError(
+                    $"Line {lineNumber} is blank; the data file must not contain blank lines.", lineNumber));
             }
 
             if (line.StartsWith(RootMarker, StringComparison.Ordinal))
@@ -63,6 +64,12 @@ public sealed class DataFileParser : IDataFileParser
                 continue;
             }
 
+            if (roots.Count == 0)
+            {
+                return ParseResult.Failed(new ParseError(
+                    "Line 1 must be a root direction starting with '+ '.", lineNumber));
+            }
+
             var position = 0;
             while (MatchesAny(line, position, PrefixGroups))
             {
@@ -71,7 +78,7 @@ public sealed class DataFileParser : IDataFileParser
 
             if (!MatchesAny(line, position, Glyphs))
             {
-                return Invalid(lineNumber);
+                return Malformed(lineNumber);
             }
 
             var depth = position / GroupWidth + 1;
@@ -104,7 +111,7 @@ public sealed class DataFileParser : IDataFileParser
             }
             else
             {
-                return Invalid(lineNumber);
+                return Malformed(lineNumber);
             }
         }
 
@@ -118,6 +125,9 @@ public sealed class DataFileParser : IDataFileParser
 
     private static ParseResult Invalid(int lineNumber) =>
         ParseResult.Failed(new ParseError($"The data file format is invalid (line {lineNumber}).", lineNumber));
+
+    private static ParseResult Malformed(int lineNumber) =>
+        ParseResult.Failed(new ParseError($"Line {lineNumber} is not a valid direction or item line.", lineNumber));
 
     private static bool MatchesAny(string line, int position, string[] candidates)
     {
