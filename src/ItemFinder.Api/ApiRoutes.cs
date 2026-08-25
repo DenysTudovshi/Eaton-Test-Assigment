@@ -1,0 +1,9 @@
+namespace ItemFinder.Api;
+
+/// <summary>Route constants; the version prefix is fixed per URL, not negotiated.</summary>
+internal static class ApiRoutes
+{
+    private const string Prefix = "/api/v1";
+
+    public const string Items = $"{Prefix}/items";
+}

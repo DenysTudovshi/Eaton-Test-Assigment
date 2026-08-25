@@ -15,4 +15,8 @@
     <NoWarn>$(NoWarn);CA2007</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\..\data\Data.txt" Link="Data.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\src\ItemFinder.Api\ItemFinder.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\data\*.txt" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
