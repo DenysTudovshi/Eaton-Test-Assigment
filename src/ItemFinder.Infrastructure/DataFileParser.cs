@@ -43,6 +43,7 @@ public sealed class DataFileParser : IDataFileParser
         var roots = new List<DirectionNode>();
         var openDirections = new List<DirectionNode>(); // index == depth of the open direction
         var seenItems = new HashSet<string>(StringComparer.Ordinal);
+        var lastLineWasItem = false;
 
         for (var index = 0; index < lines.Count; index++)
         {
@@ -61,6 +62,7 @@ public sealed class DataFileParser : IDataFileParser
                 roots.Add(root);
                 openDirections.Clear();
                 openDirections.Add(root);
+                lastLineWasItem = false;
                 continue;
             }
 
@@ -86,7 +88,11 @@ public sealed class DataFileParser : IDataFileParser
 
             if (depth > openDirections.Count)
             {
-                return Invalid(lineNumber);
+                return lastLineWasItem && depth == openDirections.Count + 1
+                    ? ParseResult.Failed(new ParseError(
+                        $"Line {lineNumber} is nested under an item; items cannot contain anything beneath them.", lineNumber))
+                    : ParseResult.Failed(new ParseError(
+                        $"Line {lineNumber} skips a level of the hierarchy.", lineNumber));
             }
 
             var parent = openDirections[depth - 1];
@@ -97,17 +103,20 @@ public sealed class DataFileParser : IDataFileParser
                 parent.AddChild(direction);
                 openDirections.RemoveRange(depth, openDirections.Count - depth);
                 openDirections.Add(direction);
+                lastLineWasItem = false;
             }
             else if (tail.StartsWith(ItemMarker, StringComparison.Ordinal))
             {
                 var item = new ItemNode(tail[ItemMarker.Length..]);
                 if (!seenItems.Add(item.Name))
                 {
-                    return Invalid(lineNumber);
+                    return ParseResult.Failed(new ParseError(
+                        $"Line {lineNumber} repeats the item '{item.Name}'; item names must be unique.", lineNumber));
                 }
 
                 parent.AddChild(item);
                 openDirections.RemoveRange(depth, openDirections.Count - depth);
+                lastLineWasItem = true;
             }
             else
             {
@@ -122,9 +131,6 @@ public sealed class DataFileParser : IDataFileParser
 
         return ParseResult.Ok(new DirectionForest(roots));
     }
-
-    private static ParseResult Invalid(int lineNumber) =>
-        ParseResult.Failed(new ParseError($"The data file format is invalid (line {lineNumber}).", lineNumber));
 
     private static ParseResult Malformed(int lineNumber) =>
         ParseResult.Failed(new ParseError($"Line {lineNumber} is not a valid direction or item line.", lineNumber));
