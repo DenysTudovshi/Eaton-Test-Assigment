@@ -27,11 +27,11 @@ public sealed class DataFileParser : IDataFileParser
         }
         catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
         {
-            return ParseResult.Failed(new ParseError($"The data file '{path}' could not be found."));
+            return ParseResult.Failed(new ParseError(ParseErrorKind.FileNotFound, $"The data file '{path}' could not be found."));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return ParseResult.Failed(new ParseError($"The data file '{path}' could not be read."));
+            return ParseResult.Failed(new ParseError(ParseErrorKind.FileUnreadable, $"The data file '{path}' could not be read."));
         }
 
         return ParseText(text);
@@ -53,7 +53,7 @@ public sealed class DataFileParser : IDataFileParser
 
             if (line.Length == 0)
             {
-                return ParseResult.Failed(new ParseError(
+                return ParseResult.Failed(new ParseError(ParseErrorKind.BlankLine,
                     $"Line {lineNumber} is blank; the data file must not contain blank lines.", lineNumber));
             }
 
@@ -69,7 +69,7 @@ public sealed class DataFileParser : IDataFileParser
 
             if (roots.Count == 0)
             {
-                return ParseResult.Failed(new ParseError(
+                return ParseResult.Failed(new ParseError(ParseErrorKind.FirstLineNotRoot,
                     "Line 1 must be a root direction starting with '+ '.", lineNumber));
             }
 
@@ -90,9 +90,9 @@ public sealed class DataFileParser : IDataFileParser
             if (depth > openDirections.Count)
             {
                 return lastLineWasItem && depth == openDirections.Count + 1
-                    ? ParseResult.Failed(new ParseError(
+                    ? ParseResult.Failed(new ParseError(ParseErrorKind.NestedUnderItem,
                         $"Line {lineNumber} is nested under an item; items cannot contain anything beneath them.", lineNumber))
-                    : ParseResult.Failed(new ParseError(
+                    : ParseResult.Failed(new ParseError(ParseErrorKind.SkippedLevel,
                         $"Line {lineNumber} skips a level of the hierarchy.", lineNumber));
             }
 
@@ -111,7 +111,7 @@ public sealed class DataFileParser : IDataFileParser
                 var item = new ItemNode(tail[ItemMarker.Length..]);
                 if (!seenItems.Add(item.Name))
                 {
-                    return ParseResult.Failed(new ParseError(
+                    return ParseResult.Failed(new ParseError(ParseErrorKind.DuplicateItem,
                         $"Line {lineNumber} repeats the item '{item.Name}'; item names must be unique.", lineNumber));
                 }
 
@@ -127,14 +127,15 @@ public sealed class DataFileParser : IDataFileParser
 
         if (roots.Count == 0)
         {
-            return ParseResult.Failed(new ParseError("The data file is empty."));
+            return ParseResult.Failed(new ParseError(ParseErrorKind.EmptyFile, "The data file is empty."));
         }
 
         return ParseResult.Ok(new DirectionForest(roots));
     }
 
     private static ParseResult Malformed(int lineNumber) =>
-        ParseResult.Failed(new ParseError($"Line {lineNumber} is not a valid direction or item line.", lineNumber));
+        ParseResult.Failed(new ParseError(ParseErrorKind.MalformedLine,
+            $"Line {lineNumber} is not a valid direction or item line.", lineNumber));
 
     private static bool MatchesAny(string line, int position, string[] candidates)
     {

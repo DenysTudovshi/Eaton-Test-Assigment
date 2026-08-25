@@ -43,8 +43,8 @@ public class ErrorBoundaryTests
     {
         var failure = ParseResult.Failed(
         [
-            new ParseError("Line 2 is blank; the data file must not contain blank lines.", 2),
-            new ParseError("Line 5 repeats the item 'Cookies'; item names must be unique.", 5),
+            new ParseError(ParseErrorKind.BlankLine, "Line 2 is blank; the data file must not contain blank lines.", 2),
+            new ParseError(ParseErrorKind.DuplicateItem, "Line 5 repeats the item 'Cookies'; item names must be unique.", 5),
         ]);
         var console = new FakeConsole();
         var app = new ItemFinderApp(console, new StubParser(failure), "Data.txt");

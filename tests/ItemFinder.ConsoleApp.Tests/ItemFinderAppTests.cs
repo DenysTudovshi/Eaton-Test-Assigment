@@ -139,7 +139,7 @@ public class ItemFinderAppTests
     [Fact]
     public void Run_ParseFailure_PrintsEachErrorAndExitsOne()
     {
-        var failure = ParseResult.Failed(new ParseError("The data file 'Data.txt' could not be found."));
+        var failure = ParseResult.Failed(new ParseError(ParseErrorKind.FileNotFound, "The data file 'Data.txt' could not be found."));
         var console = new FakeConsole();
         var app = new ItemFinderApp(console, new StubParser(failure), "Data.txt");
 

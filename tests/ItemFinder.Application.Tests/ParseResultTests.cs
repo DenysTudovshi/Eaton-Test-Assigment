@@ -20,7 +20,7 @@ public class ParseResultTests
     [Fact]
     public void Failed_CarriesErrorsAndNoForest()
     {
-        var error = new ParseError("Line 3 is blank; the data file must not contain blank lines.", 3);
+        var error = new ParseError(ParseErrorKind.BlankLine, "Line 3 is blank; the data file must not contain blank lines.", 3);
 
         var result = ParseResult.Failed(error);
 
@@ -28,6 +28,7 @@ public class ParseResultTests
         Assert.Null(result.Forest);
         var single = Assert.Single(result.Errors);
         Assert.Equal(3, single.LineNumber);
+        Assert.Equal(ParseErrorKind.BlankLine, single.Kind);
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public class ParseResultTests
     [Fact]
     public void ParseError_LineNumberIsOptional()
     {
-        var error = new ParseError("The data file could not be found.");
+        var error = new ParseError(ParseErrorKind.FileNotFound, "The data file could not be found.");
 
         Assert.Null(error.LineNumber);
     }

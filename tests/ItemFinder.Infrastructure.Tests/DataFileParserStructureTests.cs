@@ -17,6 +17,7 @@ public class DataFileParserStructureTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal("Line 2 skips a level of the hierarchy.", error.Message);
+        Assert.Equal(ParseErrorKind.SkippedLevel, error.Kind);
         Assert.Equal(2, error.LineNumber);
     }
 
@@ -30,6 +31,7 @@ public class DataFileParserStructureTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal("Line 3 is nested under an item; items cannot contain anything beneath them.", error.Message);
+        Assert.Equal(ParseErrorKind.NestedUnderItem, error.Kind);
         Assert.Equal(3, error.LineNumber);
     }
 
@@ -49,6 +51,7 @@ public class DataFileParserStructureTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal("Line 5 repeats the item 'Cookies'; item names must be unique.", error.Message);
+        Assert.Equal(ParseErrorKind.DuplicateItem, error.Kind);
         Assert.Equal(5, error.LineNumber);
     }
 

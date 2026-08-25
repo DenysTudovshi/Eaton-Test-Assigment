@@ -1,3 +1,4 @@
+using ItemFinder.Application;
 using ItemFinder.Infrastructure;
 
 namespace ItemFinder.Infrastructure.Tests;
@@ -16,6 +17,7 @@ public class DataFileParserValidationTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal($"The data file '{missingPath}' could not be found.", error.Message);
+        Assert.Equal(ParseErrorKind.FileNotFound, error.Kind);
         Assert.Null(error.LineNumber);
     }
 
@@ -29,6 +31,7 @@ public class DataFileParserValidationTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Contains("could not be", error.Message);
+        Assert.Equal(ParseErrorKind.FileNotFound, error.Kind);
         Assert.DoesNotContain("Exception", error.Message);
     }
 
@@ -38,7 +41,9 @@ public class DataFileParserValidationTests
         var result = _parser.ParseText(string.Empty);
 
         Assert.False(result.Success);
-        Assert.Equal("The data file is empty.", Assert.Single(result.Errors).Message);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("The data file is empty.", error.Message);
+        Assert.Equal(ParseErrorKind.EmptyFile, error.Kind);
     }
 
     [Fact]
@@ -51,6 +56,7 @@ public class DataFileParserValidationTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal("Line 2 is blank; the data file must not contain blank lines.", error.Message);
+        Assert.Equal(ParseErrorKind.BlankLine, error.Kind);
         Assert.Equal(2, error.LineNumber);
     }
 
@@ -64,6 +70,7 @@ public class DataFileParserValidationTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal("Line 1 must be a root direction starting with '+ '.", error.Message);
+        Assert.Equal(ParseErrorKind.FirstLineNotRoot, error.Kind);
         Assert.Equal(1, error.LineNumber);
     }
 
@@ -79,6 +86,7 @@ public class DataFileParserValidationTests
         Assert.False(result.Success);
         var error = Assert.Single(result.Errors);
         Assert.Equal($"Line {badLine} is not a valid direction or item line.", error.Message);
+        Assert.Equal(ParseErrorKind.MalformedLine, error.Kind);
         Assert.Equal(badLine, error.LineNumber);
     }
 
