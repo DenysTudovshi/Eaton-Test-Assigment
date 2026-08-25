@@ -20,10 +20,13 @@ Walk to the end of the hall.
 Turn right.
 Go through the door at the end of the hall.
 Look on top of the desk.
+
+Press Enter to continue...
 ```
 
 Items are listed alphabetically. Type an item's number and press Enter to see its
-directions; the list is shown again afterwards, and `q` quits.
+directions; press Enter again to go back to the list, and `q` at the selection
+prompt quits.
 
 ## Quick start
 

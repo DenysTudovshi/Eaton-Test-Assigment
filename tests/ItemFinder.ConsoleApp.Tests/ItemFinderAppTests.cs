@@ -28,6 +28,8 @@ public class ItemFinderAppTests
         "",
     ];
 
+    private const string ContinuePrompt = "Press Enter to continue...";
+
     private static ItemFinderApp CreateApp(FakeConsole console) =>
         new(console, StubParser.WithSampleForest(), "Data.txt");
 
@@ -42,7 +44,20 @@ public class ItemFinderAppTests
     }
 
     [Fact]
-    public void Run_SelectingItemFour_PrintsDirectionsThenTheListAgain()
+    public void Run_SelectingItemFour_PrintsDirectionsThenWaitsForEnterBeforeRelisting()
+    {
+        var console = new FakeConsole("4", "");
+
+        var exitCode = CreateApp(console).Run();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(
+            [.. ListBlock, .. MobilePhoneDirections, ContinuePrompt, .. ListBlock],
+            console.Output);
+    }
+
+    [Fact]
+    public void Run_InputExhaustedAtContinuePrompt_ExitsZeroWithoutRelisting()
     {
         var console = new FakeConsole("4");
 
@@ -50,7 +65,7 @@ public class ItemFinderAppTests
 
         Assert.Equal(0, exitCode);
         Assert.Equal(
-            [.. ListBlock, .. MobilePhoneDirections, .. ListBlock],
+            [.. ListBlock, .. MobilePhoneDirections, ContinuePrompt],
             console.Output);
     }
 
@@ -82,13 +97,26 @@ public class ItemFinderAppTests
     [Fact]
     public void Run_MultipleSelections_WorkInOneSession()
     {
-        var console = new FakeConsole("4", "2", "q");
+        var console = new FakeConsole("4", "", "2", "", "q");
 
         var exitCode = CreateApp(console).Run();
 
         Assert.Equal(0, exitCode);
         Assert.Equal(2, console.Output.Count(line => line == "Walk to the end of the hall."));
         Assert.Contains("Open the cabinet on the left.", console.Output);
+    }
+
+    [Fact]
+    public void Run_AnyInputAtContinuePrompt_ShowsTheListAgain()
+    {
+        var console = new FakeConsole("4", "anything", "q");
+
+        var exitCode = CreateApp(console).Run();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(
+            [.. ListBlock, .. MobilePhoneDirections, ContinuePrompt, .. ListBlock],
+            console.Output);
     }
 
     [Theory]
@@ -98,7 +126,7 @@ public class ItemFinderAppTests
     [InlineData("")]
     public void Run_InvalidInput_PrintsOneHintAndKeepsAccepting(string bad)
     {
-        var console = new FakeConsole(bad, "2", "q");
+        var console = new FakeConsole(bad, "2", "", "q");
 
         var exitCode = CreateApp(console).Run();
 

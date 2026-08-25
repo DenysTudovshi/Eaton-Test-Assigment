@@ -56,6 +56,12 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
                     && selection <= directory.AvailableItems.Count)
                 {
                     PrintDirections(directory, directory.AvailableItems[selection - 1]);
+                    console.WriteLine("Press Enter to continue...");
+                    if (console.ReadLine() is null)
+                    {
+                        return 0; // input exhausted (for example, piped stdin)
+                    }
+
                     break; // back to the item list
                 }
 
