@@ -94,6 +94,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -103,6 +104,7 @@ app.UseSwaggerUI();
 
 app.MapGroup(ApiRoutes.Identity).WithTags("Identity").MapIdentityApi<ApiUser>();
 app.MapItemEndpoints();
+app.MapDataFileEndpoints();
 
 await app.RunAsync();
 

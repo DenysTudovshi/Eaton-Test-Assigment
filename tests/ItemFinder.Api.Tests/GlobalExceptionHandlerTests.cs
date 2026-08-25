@@ -30,6 +30,22 @@ public sealed class GlobalExceptionHandlerTests
     }
 
     [Fact]
+    public async Task TryHandleAsync_BadHttpRequest_ReturnsItsStatusCodeAsProblem()
+    {
+        var context = CreateContext();
+
+        var handled = await Handler().TryHandleAsync(
+            context,
+            new BadHttpRequestException("Failed to read the form.", StatusCodes.Status400BadRequest),
+            CancellationToken.None);
+
+        Assert.True(handled);
+        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
+        var body = await ReadBody(context);
+        Assert.Equal("Failed to read the form.", body.RootElement.GetProperty("detail").GetString());
+    }
+
+    [Fact]
     public async Task TryHandleAsync_UnknownException_Returns500WithoutExceptionDetails()
     {
         var context = CreateContext();

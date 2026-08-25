@@ -8,4 +8,6 @@ internal static class ApiRoutes
     public const string Items = $"{Prefix}/items";
 
     public const string Identity = $"{Prefix}/identity";
+
+    public const string DataFile = $"{Prefix}/data-file";
 }

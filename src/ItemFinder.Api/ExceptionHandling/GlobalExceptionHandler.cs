@@ -26,6 +26,13 @@ public sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHandle
                 Status = StatusCodes.Status400BadRequest,
                 Title = "Validation failed.",
             },
+            // The framework's message describes the malformed request, not our internals — safe to relay.
+            BadHttpRequestException badRequest => new ProblemDetails
+            {
+                Status = badRequest.StatusCode,
+                Title = "The request could not be read.",
+                Detail = badRequest.Message,
+            },
             _ => UnexpectedError(httpContext, exception),
         };
 
