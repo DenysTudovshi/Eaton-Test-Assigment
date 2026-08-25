@@ -1,0 +1,58 @@
+## Build results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+## Visual Studio / VS Code / Rider
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.userprefs
+*.sln.docstates
+*.sln.iml
+_ReSharper*/
+*.DotSettings.user
+
+## NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+
+## Test results & coverage
+[Tt]est[Rr]esult*/
+TestResults/
+[Bb]uild[Ll]og.*
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+## Publish output
+[Pp]ublish/
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.pubxml.user
+
+## Local secrets & machine-specific config
+secrets.json
+appsettings.*.local.json
+*.local.json
+
+## Misc
+*.log
+*.tmp
+*.bak
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
