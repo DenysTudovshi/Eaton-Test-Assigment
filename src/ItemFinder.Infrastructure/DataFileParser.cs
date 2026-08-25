@@ -39,6 +39,8 @@ public sealed class DataFileParser : IDataFileParser
 
     public ParseResult ParseText(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
+
         var lines = SplitLines(text);
 
         var roots = new List<DirectionNode>();
@@ -159,7 +161,7 @@ public sealed class DataFileParser : IDataFileParser
             text = text[1..];
         }
 
-        var lines = text.Replace("\r\n", "\n").Split('\n').ToList();
+        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n').ToList();
 
         // A single trailing newline produces one empty final entry; tolerate it.
         if (lines.Count > 0 && lines[^1].Length == 0)

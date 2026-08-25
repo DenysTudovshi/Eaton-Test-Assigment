@@ -4,5 +4,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisMode>All</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <!-- Tests: underscore naming (Method_Scenario_Outcome) is intentional, explicit
+       StringComparison arguments add nothing to assertions, and library API-design
+       rules (CA1002) do not apply to test doubles. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <NoWarn>$(NoWarn);CA1707;CA1307;CA1002</NoWarn>
   </PropertyGroup>
 </Project>

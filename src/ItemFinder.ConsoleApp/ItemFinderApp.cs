@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using ItemFinder.Application;
 using ItemFinder.Domain;
 
@@ -6,6 +8,8 @@ namespace ItemFinder.ConsoleApp;
 /// <summary>The interactive flow: parse the data file, list items, resolve a selection to directions.</summary>
 public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, string dataFilePath)
 {
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Last-resort boundary: whatever fails, the user gets one friendly line and exit code 1, never a stack trace.")]
     public int Run()
     {
         try

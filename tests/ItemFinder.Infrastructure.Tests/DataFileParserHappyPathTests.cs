@@ -100,7 +100,7 @@ public class DataFileParserHappyPathTests
                 "Inspect the upper tray.",
             ],
             directory.GetDirections("Allen Wrench Set"));
-        Assert.Equal("Inspect the lower drawer.", directory.GetDirections("Work Gloves")!.Last());
+        Assert.Equal("Inspect the lower drawer.", directory.GetDirections("Work Gloves")![^1]);
     }
 
     [Fact]

@@ -9,6 +9,8 @@ public sealed class ItemDirectory
 
     public ItemDirectory(DirectionForest forest)
     {
+        ArgumentNullException.ThrowIfNull(forest);
+
         Items = forest.EnumerateItems()
             .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
