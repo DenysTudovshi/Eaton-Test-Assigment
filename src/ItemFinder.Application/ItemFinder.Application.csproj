@@ -8,6 +8,7 @@
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <!-- Pinned: 12.4.1 is the last Apache-2.0 MediatR release; v13+ is commercially licensed. -->
     <PackageReference Include="MediatR" Version="[12.4.1]" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
   <PropertyGroup>

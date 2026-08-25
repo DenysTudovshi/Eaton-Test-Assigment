@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+
 using FluentValidation;
 
 using ItemFinder.Api;
@@ -14,9 +16,12 @@ using ItemFinder.Infrastructure.Storage;
 using MediatR;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+
+const string identityRateLimitPolicy = "identity";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +89,21 @@ builder.Services.AddIdentityApiEndpoints<ApiUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApiDbContext>();
 
+// Brakes credential guessing alongside Identity's lockout; keyed per caller address.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(identityRateLimitPolicy, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
+
 var app = builder.Build();
 
 await using (var scope = app.Services.CreateAsyncScope())
@@ -95,6 +115,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -102,7 +123,10 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapGroup(ApiRoutes.Identity).WithTags("Identity").MapIdentityApi<ApiUser>();
+app.MapGroup(ApiRoutes.Identity)
+    .WithTags("Identity")
+    .RequireRateLimiting(identityRateLimitPolicy)
+    .MapIdentityApi<ApiUser>();
 app.MapItemEndpoints();
 app.MapDataFileEndpoints();
 
