@@ -38,37 +38,45 @@ public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, 
         {
             RenderItemList(directory);
 
-            while (true)
+            var index = ReadSelection(directory.Items.Count);
+            if (index is null)
             {
-                var input = console.ReadLine();
-                if (input is null)
-                {
-                    return 0; // input exhausted (for example, piped stdin)
-                }
-
-                var trimmed = input.Trim();
-                if (trimmed.Equals("q", StringComparison.OrdinalIgnoreCase))
-                {
-                    return 0;
-                }
-
-                if (int.TryParse(trimmed, out var selection)
-                    && selection >= 1
-                    && selection <= directory.Items.Count)
-                {
-                    PrintDirections(directory.Items[selection - 1]);
-                    console.WriteLine("Press Enter to continue...");
-                    if (console.ReadLine() is null)
-                    {
-                        return 0; // input exhausted (for example, piped stdin)
-                    }
-
-                    break; // back to the item list
-                }
-
-                console.WriteLine(
-                    $"Please enter a number between 1 and {directory.Items.Count}, or 'q' to quit.");
+                return 0;
             }
+
+            PrintDirections(directory.Items[index.Value]);
+
+            console.WriteLine("Press Enter to continue...");
+            if (console.ReadLine() is null)
+            {
+                return 0; // input exhausted (for example, piped stdin)
+            }
+        }
+    }
+
+    /// <summary>Reads until a valid item number arrives; null means quit ('q' or end of input).</summary>
+    private int? ReadSelection(int itemCount)
+    {
+        while (true)
+        {
+            var input = console.ReadLine();
+            if (input is null)
+            {
+                return null;
+            }
+
+            var trimmed = input.Trim();
+            if (trimmed.Equals("q", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            if (int.TryParse(trimmed, out var selection) && selection >= 1 && selection <= itemCount)
+            {
+                return selection - 1;
+            }
+
+            console.WriteLine($"Please enter a number between 1 and {itemCount}, or 'q' to quit.");
         }
     }
 
