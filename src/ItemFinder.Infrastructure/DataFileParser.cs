@@ -29,7 +29,7 @@ public sealed class DataFileParser : IDataFileParser
         {
             return ParseResult.Failed(new ParseError($"The data file '{path}' could not be found."));
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             return ParseResult.Failed(new ParseError($"The data file '{path}' could not be read."));
         }

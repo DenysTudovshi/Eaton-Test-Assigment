@@ -111,6 +111,27 @@ public class DirectionForestTests
         Assert.Equal("Pencils", item.Name);
     }
 
+    [Fact]
+    public void EnumerateItems_ExtremelyDeepTree_DoesNotOverflow()
+    {
+        var root = new DirectionNode("Step 0.");
+        var current = root;
+        for (var depth = 1; depth < 50_000; depth++)
+        {
+            var next = new DirectionNode($"Step {depth}.");
+            current.AddChild(next);
+            current = next;
+        }
+
+        current.AddChild(new ItemNode("Needle"));
+        var forest = new DirectionForest([root]);
+
+        var item = Assert.Single(forest.EnumerateItems());
+
+        Assert.Equal(50_000, item.Directions.Count);
+        Assert.Equal("Step 49999.", item.Directions[^1]);
+    }
+
     private static DirectionForest BuildSampleForest()
     {
         var walk = new DirectionNode("Walk to the end of the hall.");

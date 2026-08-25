@@ -91,4 +91,13 @@ public class DataFileParserValidationTests
         Assert.DoesNotContain("Exception", error.Message);
         Assert.DoesNotContain("Stack", error.Message);
     }
+
+    [Fact]
+    public void ParseFile_EmptyPath_ReportsFriendlyError()
+    {
+        var result = _parser.ParseFile(string.Empty);
+
+        Assert.False(result.Success);
+        Assert.Contains("could not be", Assert.Single(result.Errors).Message);
+    }
 }
