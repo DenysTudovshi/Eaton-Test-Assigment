@@ -6,4 +6,6 @@ internal static class ApiRoutes
     private const string Prefix = "/api/v1";
 
     public const string Items = $"{Prefix}/items";
+
+    public const string Identity = $"{Prefix}/identity";
 }

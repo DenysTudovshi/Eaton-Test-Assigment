@@ -1,7 +1,9 @@
 using FluentValidation;
 
+using ItemFinder.Api;
 using ItemFinder.Api.Endpoints;
 using ItemFinder.Api.ExceptionHandling;
+using ItemFinder.Api.Identity;
 using ItemFinder.Application.Behaviors;
 using ItemFinder.Application.Interfaces;
 using ItemFinder.Application.Options;
@@ -11,6 +13,8 @@ using ItemFinder.Infrastructure.Storage;
 
 using MediatR;
 
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
@@ -65,16 +69,42 @@ builder.Services.AddSingleton<IManagedDataFileStore>(provider => new ManagedData
     provider.GetRequiredService<IOptions<DataFileOptions>>().Value,
     provider.GetRequiredService<IDataFileParser>()));
 
+builder.Services.AddDbContext<ApiDbContext>((provider, options) =>
+{
+    // Resolved lazily: test hosts override Identity:DbPath after this registration runs.
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var identityDbPath = Path.GetFullPath(
+        configuration["Identity:DbPath"] ?? "App_Data/identity.db", AppContext.BaseDirectory);
+    Directory.CreateDirectory(Path.GetDirectoryName(identityDbPath)!);
+    options.UseSqlite($"Data Source={identityDbPath}");
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddIdentityApiEndpoints<ApiUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApiDbContext>();
+
 var app = builder.Build();
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var identityDb = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
+    await identityDb.Database.MigrateAsync();
+    await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+}
+
 app.UseExceptionHandler();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapGroup(ApiRoutes.Identity).WithTags("Identity").MapIdentityApi<ApiUser>();
 app.MapItemEndpoints();
 
-app.Run();
+await app.RunAsync();
 
 /// <summary>Entry-point marker so integration tests can host the app via WebApplicationFactory.</summary>
 public partial class Program
