@@ -1,12 +1,19 @@
 using System.Diagnostics.CodeAnalysis;
 
 using ItemFinder.Application;
-using ItemFinder.Domain;
+using ItemFinder.ConsoleApp.Input;
+using ItemFinder.ConsoleApp.Views;
 
 namespace ItemFinder.ConsoleApp;
 
-/// <summary>The interactive flow: parse the data file, list items, resolve a selection to directions.</summary>
-public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, string dataFilePath)
+/// <summary>The interactive session: load the data file, then loop list → select → directions → pause.</summary>
+public sealed class ItemFinderApp(
+    ItemDirectoryLoader loader,
+    ItemListView itemList,
+    DirectionsView directions,
+    ErrorView errors,
+    SelectionReader selection,
+    string dataFilePath)
 {
     [SuppressMessage("Design", "CA1031:Do not catch general exception types",
         Justification = "Last-resort boundary: whatever fails, the user gets one friendly line and exit code 1, never a stack trace.")]
@@ -18,7 +25,7 @@ public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, 
         }
         catch (Exception)
         {
-            console.WriteLine("Something went wrong and the application had to stop. Please check the data file and try again.");
+            errors.RenderUnexpectedFailure();
             return 1;
         }
     }
@@ -28,11 +35,7 @@ public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, 
         var load = loader.Load(dataFilePath);
         if (!load.Success)
         {
-            foreach (var error in load.Errors)
-            {
-                console.WriteLine(error.Message);
-            }
-
+            errors.Render(load.Errors);
             return 1;
         }
 
@@ -40,71 +43,20 @@ public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, 
 
         while (true)
         {
-            RenderItemList(directory);
+            itemList.Render(directory);
 
-            var index = ReadSelection(directory.Items.Count);
+            var index = selection.ReadSelection(directory.Items.Count);
             if (index is null)
             {
                 return 0;
             }
 
-            PrintDirections(directory.Items[index.Value]);
+            directions.Render(directory.Items[index.Value]);
 
-            console.WriteLine("Press Enter to continue...");
-            if (console.ReadLine() is null)
+            if (!selection.WaitForEnter())
             {
-                return 0; // input exhausted (for example, piped stdin)
+                return 0;
             }
         }
-    }
-
-    /// <summary>Reads until a valid item number arrives; null means quit ('q' or end of input).</summary>
-    private int? ReadSelection(int itemCount)
-    {
-        while (true)
-        {
-            var input = console.ReadLine();
-            if (input is null)
-            {
-                return null;
-            }
-
-            var trimmed = input.Trim();
-            if (trimmed.Equals("q", StringComparison.OrdinalIgnoreCase))
-            {
-                return null;
-            }
-
-            if (int.TryParse(trimmed, out var selection) && selection >= 1 && selection <= itemCount)
-            {
-                return selection - 1;
-            }
-
-            console.WriteLine($"Please enter a number between 1 and {itemCount}, or 'q' to quit.");
-        }
-    }
-
-    private void PrintDirections(LocatedItem item)
-    {
-        console.WriteLine();
-        foreach (var step in item.Directions)
-        {
-            console.WriteLine(step);
-        }
-
-        console.WriteLine();
-    }
-
-    private void RenderItemList(ItemDirectory directory)
-    {
-        console.WriteLine("Available items:");
-        console.WriteLine();
-        for (var i = 0; i < directory.Items.Count; i++)
-        {
-            console.WriteLine($"[{i + 1}] - {directory.Items[i].Name}");
-        }
-
-        console.WriteLine();
-        console.WriteLine("What item would you like to search for?");
     }
 }
