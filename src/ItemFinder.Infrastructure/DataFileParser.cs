@@ -10,6 +10,7 @@ namespace ItemFinder.Infrastructure;
 /// </summary>
 public sealed class DataFileParser : IDataFileParser
 {
+    private const char ByteOrderMark = '﻿';
     private const string RootMarker = "+ ";
     private const string DirectionMarker = "+ ";
     private const string ItemMarker = " Item: ";
@@ -149,7 +150,6 @@ public sealed class DataFileParser : IDataFileParser
         return false;
     }
 
-    private const char ByteOrderMark = '﻿';
 
     private static List<string> SplitLines(string text)
     {

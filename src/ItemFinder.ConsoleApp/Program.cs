@@ -1,6 +1,7 @@
 using ItemFinder.Application;
 using ItemFinder.ConsoleApp;
 using ItemFinder.Infrastructure;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using var services = new ServiceCollection()
