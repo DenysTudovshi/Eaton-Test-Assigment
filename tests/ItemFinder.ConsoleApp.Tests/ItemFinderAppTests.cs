@@ -31,7 +31,7 @@ public class ItemFinderAppTests
     private const string ContinuePrompt = "Press Enter to continue...";
 
     private static ItemFinderApp CreateApp(FakeConsole console) =>
-        new(console, StubParser.WithSampleForest(), "Data.txt");
+        new(console, new ItemDirectoryLoader(StubParser.WithSampleForest()), "Data.txt");
 
     [Fact]
     public void Run_RendersTheAlphabeticalListPerContract()
@@ -141,7 +141,7 @@ public class ItemFinderAppTests
     {
         var failure = ParseResult.Failed(new ParseError(ParseErrorKind.FileNotFound, "The data file 'Data.txt' could not be found."));
         var console = new FakeConsole();
-        var app = new ItemFinderApp(console, new StubParser(failure), "Data.txt");
+        var app = new ItemFinderApp(console, new ItemDirectoryLoader(new StubParser(failure)), "Data.txt");
 
         var exitCode = app.Run();
 

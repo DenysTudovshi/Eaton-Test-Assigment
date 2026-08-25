@@ -16,7 +16,7 @@ public class ErrorBoundaryTests
     public void Run_UnexpectedException_PrintsOneFriendlyLineAndExitsOne()
     {
         var console = new FakeConsole();
-        var app = new ItemFinderApp(console, new ThrowingParser(), "Data.txt");
+        var app = new ItemFinderApp(console, new ItemDirectoryLoader(new ThrowingParser()), "Data.txt");
 
         var exitCode = app.Run();
 
@@ -29,7 +29,7 @@ public class ErrorBoundaryTests
     public void Run_UnexpectedException_NeverLeaksExceptionDetails()
     {
         var console = new FakeConsole();
-        var app = new ItemFinderApp(console, new ThrowingParser(), "Data.txt");
+        var app = new ItemFinderApp(console, new ItemDirectoryLoader(new ThrowingParser()), "Data.txt");
 
         app.Run();
 
@@ -47,7 +47,7 @@ public class ErrorBoundaryTests
             new ParseError(ParseErrorKind.DuplicateItem, "Line 5 repeats the item 'Cookies'; item names must be unique.", 5),
         ]);
         var console = new FakeConsole();
-        var app = new ItemFinderApp(console, new StubParser(failure), "Data.txt");
+        var app = new ItemFinderApp(console, new ItemDirectoryLoader(new StubParser(failure)), "Data.txt");
 
         var exitCode = app.Run();
 
@@ -59,7 +59,7 @@ public class ErrorBoundaryTests
     public void Run_HappyPath_ExitsZero()
     {
         var console = new FakeConsole("q");
-        var app = new ItemFinderApp(console, StubParser.WithSampleForest(), "Data.txt");
+        var app = new ItemFinderApp(console, new ItemDirectoryLoader(StubParser.WithSampleForest()), "Data.txt");
 
         Assert.Equal(0, app.Run());
     }

@@ -4,7 +4,7 @@ using ItemFinder.Domain;
 namespace ItemFinder.ConsoleApp;
 
 /// <summary>The interactive flow: parse the data file, list items, resolve a selection to directions.</summary>
-public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, string dataFilePath)
+public sealed class ItemFinderApp(IConsole console, ItemDirectoryLoader loader, string dataFilePath)
 {
     public int Run()
     {
@@ -21,10 +21,10 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
 
     private int RunCore()
     {
-        var result = parser.ParseFile(dataFilePath);
-        if (!result.Success)
+        var load = loader.Load(dataFilePath);
+        if (!load.Success)
         {
-            foreach (var error in result.Errors)
+            foreach (var error in load.Errors)
             {
                 console.WriteLine(error.Message);
             }
@@ -32,7 +32,7 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
             return 1;
         }
 
-        var directory = new ItemDirectory(result.Forest);
+        var directory = load.Directory;
 
         while (true)
         {
