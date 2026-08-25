@@ -1,0 +1,15 @@
++ Walk to the end of the hall.
+├──+ Turn left.
+|  └──+ Go through the first door on the right.
+|     ├──+ Open the cabinet on the left.
+|     |  └── Item: Cookies
+|     ├──+ Open the cabinet above the sink.
+|     |  └── Item: Coffee Mug
+|     └──+ Open the refridgerator.
+|        └── Item: Milk  
+└──+ Turn right.
+   └──+ Go through the door at the end of the hall.
+      ├──+ Look on top of the desk.
+      |  └── Item: Mobile Phone
+      └──+ Open the desk drawer.
+         └── Item: Pencils

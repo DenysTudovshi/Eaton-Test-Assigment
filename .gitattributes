@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Canonical test inputs must stay byte-exact - no line-ending normalization
+data/** -text

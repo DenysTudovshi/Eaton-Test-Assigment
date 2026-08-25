@@ -1,0 +1,26 @@
++ Enter the building lobby.
+├──+ Go to the west hallway.
+|  ├──+ Enter the kitchen.
+|  |  ├──+ Open the pantry.
+|  |  |  └── Item: Granola Bars
+|  |  └──+ Open the fridge.
+|  |     └── Item: Orange Juice
+|  └──+ Enter the office.
+|     ├──+ Open the top desk drawer.
+|     |  └── Item: Notepad
+|     └──+ Check the filing cabinet.
+|        └── Item: Envelope Pack
+└──+ Go to the east hallway.
+   ├──+ Enter the bedroom.
+   |  ├──+ Open the closet.
+   |  |  └── Item: Travel Backpack
+   |  └──+ Check under the bed.
+   |     └── Item: Shoe Box
+   └──+ Enter the utility room.
+      ├──+ Open the tool chest.
+      |  ├──+ Inspect the upper tray.
+      |  |  └── Item: Allen Wrench Set
+      |  └──+ Inspect the lower drawer.
+      |     └── Item: Work Gloves
+      └──+ Check the wall shelf.
+         └── Item: Flashlight
