@@ -19,23 +19,48 @@ public sealed class ItemFinderApp(IConsole console, IDataFileParser parser, stri
         }
 
         var directory = new ItemDirectory(result.Forest!);
-        RenderItemList(directory);
 
-        var input = console.ReadLine();
-        if (input is not null
-            && int.TryParse(input.Trim(), out var selection)
-            && selection >= 1
-            && selection <= directory.AvailableItems.Count)
+        while (true)
         {
-            var itemName = directory.AvailableItems[selection - 1];
-            console.WriteLine();
-            foreach (var step in directory.GetDirections(itemName)!)
+            RenderItemList(directory);
+
+            while (true)
             {
-                console.WriteLine(step);
+                var input = console.ReadLine();
+                if (input is null)
+                {
+                    return 0; // input exhausted (for example, piped stdin)
+                }
+
+                var trimmed = input.Trim();
+                if (trimmed.Equals("q", StringComparison.OrdinalIgnoreCase))
+                {
+                    return 0;
+                }
+
+                if (int.TryParse(trimmed, out var selection)
+                    && selection >= 1
+                    && selection <= directory.AvailableItems.Count)
+                {
+                    PrintDirections(directory, directory.AvailableItems[selection - 1]);
+                    break; // back to the item list
+                }
+
+                console.WriteLine(
+                    $"Please enter a number between 1 and {directory.AvailableItems.Count}, or 'q' to quit.");
             }
         }
+    }
 
-        return 0;
+    private void PrintDirections(ItemDirectory directory, string itemName)
+    {
+        console.WriteLine();
+        foreach (var step in directory.GetDirections(itemName)!)
+        {
+            console.WriteLine(step);
+        }
+
+        console.WriteLine();
     }
 
     private void RenderItemList(ItemDirectory directory)
