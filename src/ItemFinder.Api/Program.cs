@@ -127,10 +127,7 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapGroup(ApiRoutes.Identity)
-    .WithTags("Identity")
-    .RequireRateLimiting(identityRateLimitPolicy)
-    .MapIdentityApi<ApiUser>();
+app.MapIdentityEndpoints(identityRateLimitPolicy);
 app.MapItemEndpoints();
 app.MapDataFileEndpoints();
 

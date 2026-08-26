@@ -38,18 +38,51 @@ public sealed class IdentityEndpointsTests : IClassFixture<ApiTestFactory>
     }
 
     [Fact]
-    public async Task ManageInfo_RequiresToken()
+    public async Task BearerToken_Authenticates_ProtectedEndpointDistinguishes401From403()
     {
         using var client = _factory.CreateClient();
-        var infoUri = new Uri("/api/v1/identity/manage/info", UriKind.Relative);
+        var dataFileUri = new Uri("/api/v1/data-file", UriKind.Relative);
 
-        using var anonymous = await client.GetAsync(infoUri);
+        using var anonymous = await client.GetAsync(dataFileUri);
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
 
         var token = await RegisterAndLogin(client, "user2@test.local");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        using var authorized = await client.GetAsync(infoUri);
-        Assert.Equal(HttpStatusCode.OK, authorized.StatusCode);
+        using var authenticated = await client.GetAsync(dataFileUri);
+        Assert.Equal(HttpStatusCode.Forbidden, authenticated.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("POST", "/api/v1/identity/refresh")]
+    [InlineData("GET", "/api/v1/identity/manage/info")]
+    [InlineData("POST", "/api/v1/identity/forgotPassword")]
+    [InlineData("POST", "/api/v1/identity/resetPassword")]
+    public async Task FrameworkIdentityEndpoints_AreRemoved(string method, string route)
+    {
+        using var client = _factory.CreateClient();
+        using var request = new HttpRequestMessage(new HttpMethod(method), new Uri(route, UriKind.Relative));
+        if (method == "POST")
+        {
+            request.Content = JsonContent.Create(new { });
+        }
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_InvalidEmail_Returns400WithFieldErrors()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/identity/register", new { email = "not-an-email", password = "User!Passw0rd" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.True(body.RootElement.TryGetProperty("errors", out var errors));
+        Assert.True(errors.EnumerateObject().Any());
     }
 
     [Fact]
