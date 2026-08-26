@@ -4,9 +4,12 @@ using ItemFinder.Api.Identity;
 using ItemFinder.Application.Commands.DeleteDataFile;
 using ItemFinder.Application.Commands.ReplaceDataFile;
 using ItemFinder.Application.Dtos;
+using ItemFinder.Application.Options;
 using ItemFinder.Application.Queries.GetDataFile;
 
 using MediatR;
+
+using Microsoft.Extensions.Options;
 
 namespace ItemFinder.Api.Endpoints;
 
@@ -57,13 +60,27 @@ public static class DataFileEndpoints
     private static async Task<IResult> ReplaceDataFile(
         IFormFile? file,
         ISender sender,
+        IOptions<DataFileOptions> dataFileOptions,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(dataFileOptions);
+
         if (file is null || file.Length == 0)
         {
             return TypedResults.Problem(
                 title: "Attach the data file in the 'file' form field.",
                 statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        // Checked from the declared length so an oversized body is never read into
+        // memory; the command validator re-checks the same limit in the pipeline.
+        var maxSizeBytes = dataFileOptions.Value.MaxSizeBytes;
+        if (file.Length > maxSizeBytes)
+        {
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["FileSize"] = [$"The file exceeds the {maxSizeBytes / 1024} KB size limit."],
+            });
         }
 
         string content;
