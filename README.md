@@ -87,15 +87,29 @@ then open http://localhost:5054/swagger.
 
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/v1/items?search=&page=&pageSize=` | — | Items with their directions, alphabetical; case-insensitive substring search and paging |
+| GET | `/api/v1/items?search=&name=&fields=&page=&pageSize=` | — | Items with their directions, alphabetical; case-insensitive substring search and paging; repeated `name` params fetch several items' directions in one request; `fields=name` returns just the names |
 | GET | `/api/v1/items/{name}` | — | One item by exact, case-insensitive name; 404 if absent |
-| POST | `/api/v1/identity/register` · `/login` · `/refresh` | — | Account registration and the bearer-token flow |
+| POST | `/api/v1/identity/register` · `/login` | — | Account registration and login — the entire identity surface; login returns the bearer token |
 | GET | `/api/v1/data-file` | Admin | Download the current data file |
 | PUT | `/api/v1/data-file` | Admin | Upload a replacement (multipart `file` field); 201 on first upload, 200 on replace |
 | DELETE | `/api/v1/data-file` | Admin | Remove the data file; idempotent 204 |
 
 Errors are RFC 7807 problem details throughout: `401` without a token, `403`
 authenticated without the role, `400` with per-field messages for invalid input.
+
+Two conveniences on the item list mirror how the console app is used:
+
+```
+curl "http://localhost:5054/api/v1/items?fields=name"
+# the console-style suggestion list - names only, alphabetical
+
+curl "http://localhost:5054/api/v1/items?name=Coffee%20Mug&name=Pencils"
+# directions for several items in one request; a name that matches nothing
+# simply contributes nothing (use /api/v1/items/{name} for a per-name 404)
+```
+
+The `name` filter is exact (case-insensitive) and mutually exclusive with
+`search`; both combine with `fields=name` and paging.
 
 ### Authentication and the admin account
 
@@ -126,6 +140,10 @@ curl -X PUT http://localhost:5054/api/v1/data-file \
 
 In Swagger UI, paste the `accessToken` into the **Authorize** dialog to call the
 protected endpoints from the browser.
+
+Register and login are deliberately the only identity endpoints — there is no
+refresh, password reset, or profile management. Tokens expire after an hour;
+log in again to get a new one.
 
 ### Upload validation
 
