@@ -18,7 +18,13 @@ public sealed class ListItemsQueryHandler(IManagedDataFileStore store)
         IReadOnlyList<LocatedItem> items = store.CurrentDirectory?.Items ?? [];
 
         IEnumerable<LocatedItem> filtered = items;
-        if (!string.IsNullOrWhiteSpace(request.Search))
+        if (request.Name is { Length: > 0 } names)
+        {
+            var wanted = new HashSet<string>(
+                names.Select(name => name.Trim()), StringComparer.OrdinalIgnoreCase);
+            filtered = items.Where(item => wanted.Contains(item.Name));
+        }
+        else if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim();
             filtered = items.Where(item => item.Name.Contains(term, StringComparison.OrdinalIgnoreCase));

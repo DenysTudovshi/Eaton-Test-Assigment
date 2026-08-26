@@ -174,6 +174,78 @@ public sealed class ItemEndpointsTests : IClassFixture<ApiTestFactory>
         Assert.True(body.RootElement.GetProperty("errors").TryGetProperty("Fields", out _));
     }
 
+    [Fact]
+    public async Task GetItems_NameFilter_ReturnsExactlyThoseItemsWithDirections()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/items?name=Coffee%20Mug&name=Pencils", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = await ReadJson(response);
+        Assert.Equal(2, body.RootElement.GetProperty("totalItems").GetInt32());
+
+        var items = body.RootElement.GetProperty("items");
+        Assert.Equal("Coffee Mug", items[0].GetProperty("name").GetString());
+        Assert.Equal("Pencils", items[1].GetProperty("name").GetString());
+        Assert.True(items[0].GetProperty("directions").GetArrayLength() > 0);
+        Assert.True(items[1].GetProperty("directions").GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public async Task GetItems_NameFilter_MatchesCaseInsensitivelyAndSkipsMisses()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/items?name=milk&name=No%20Such%20Item", UriKind.Relative));
+
+        using var body = await ReadJson(response);
+        Assert.Equal(1, body.RootElement.GetProperty("totalItems").GetInt32());
+        Assert.Equal("Milk", body.RootElement.GetProperty("items")[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetItems_NameFilter_CombinesWithNamesProjection()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/items?name=Pencils&fields=name", UriKind.Relative));
+
+        using var body = await ReadJson(response);
+        var item = body.RootElement.GetProperty("items")[0];
+        Assert.Equal("Pencils", item.GetProperty("name").GetString());
+        Assert.False(item.TryGetProperty("directions", out _));
+    }
+
+    [Fact]
+    public async Task GetItems_NameFilterWithSearch_Returns400()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/items?name=Milk&search=mi", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var body = await ReadJson(response);
+        Assert.True(body.RootElement.GetProperty("errors").TryGetProperty("Search", out _));
+    }
+
+    [Fact]
+    public async Task GetItems_TooManyNames_Returns400()
+    {
+        using var client = _factory.CreateClient();
+        var query = string.Join('&', Enumerable.Range(1, 21).Select(i => $"name=Item{i}"));
+
+        using var response = await client.GetAsync(new Uri($"/api/v1/items?{query}", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var body = await ReadJson(response);
+        Assert.True(body.RootElement.GetProperty("errors").TryGetProperty("Name", out _));
+    }
+
     private static async Task<JsonDocument> ReadJson(HttpResponseMessage response) =>
         JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 }
