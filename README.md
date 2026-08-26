@@ -1,6 +1,6 @@
 # Item Finder
 
-[![CI](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml/badge.svg)](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml)
+[![CI](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml)
 
 A console application that reads a data file describing where items are located,
 lists the items it finds, and prints step-by-step directions to whichever item you
