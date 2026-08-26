@@ -24,6 +24,13 @@ public sealed class DataFileParser : IDataFileParser
 
     public ParseResult ParseFile(string path)
     {
+        // Decided up front: Windows fails to open a directory, but Linux opens it and
+        // only the read fails, with an exception that would map to a different error.
+        if (Directory.Exists(path))
+        {
+            return ParseResult.Failed(new ParseError(ParseErrorKind.FileNotFound, $"The data file '{path}' could not be found."));
+        }
+
         string text;
         try
         {
