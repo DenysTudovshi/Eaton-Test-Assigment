@@ -24,11 +24,12 @@ public sealed class ListItemsQueryHandler(IManagedDataFileStore store)
             filtered = items.Where(item => item.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
+        var namesOnly = ListItemsQuery.NameField.Equals(request.Fields, StringComparison.OrdinalIgnoreCase);
         var matches = filtered.ToList();
         var page = matches
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(item => new ItemDto(item.Name, item.Directions))
+            .Select(item => new ItemDto(item.Name, namesOnly ? null : item.Directions))
             .ToList();
 
         return Task.FromResult(new ItemListResult(page, request.Page, request.PageSize, matches.Count));

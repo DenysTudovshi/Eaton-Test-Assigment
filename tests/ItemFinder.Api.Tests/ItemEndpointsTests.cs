@@ -133,6 +133,47 @@ public sealed class ItemEndpointsTests : IClassFixture<ApiTestFactory>
         Assert.Equal(0, body.RootElement.GetProperty("items").GetArrayLength());
     }
 
+    [Fact]
+    public async Task GetItems_FieldsName_ReturnsNamesWithoutDirections()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/api/v1/items?fields=name", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = await ReadJson(response);
+        Assert.Equal(5, body.RootElement.GetProperty("totalItems").GetInt32());
+
+        var first = body.RootElement.GetProperty("items")[0];
+        Assert.Equal("Coffee Mug", first.GetProperty("name").GetString());
+        Assert.False(first.TryGetProperty("directions", out _));
+    }
+
+    [Fact]
+    public async Task GetItems_FieldsName_CombinesWithSearch()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/api/v1/items?fields=name&search=co", UriKind.Relative));
+
+        using var body = await ReadJson(response);
+        Assert.Equal(2, body.RootElement.GetProperty("totalItems").GetInt32());
+        Assert.Equal("Coffee Mug", body.RootElement.GetProperty("items")[0].GetProperty("name").GetString());
+        Assert.Equal("Cookies", body.RootElement.GetProperty("items")[1].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetItems_UnknownFieldsValue_Returns400()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/api/v1/items?fields=everything", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var body = await ReadJson(response);
+        Assert.True(body.RootElement.GetProperty("errors").TryGetProperty("Fields", out _));
+    }
+
     private static async Task<JsonDocument> ReadJson(HttpResponseMessage response) =>
         JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 }

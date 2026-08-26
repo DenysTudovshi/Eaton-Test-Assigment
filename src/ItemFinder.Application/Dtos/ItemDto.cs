@@ -1,4 +1,7 @@
 namespace ItemFinder.Application.Dtos;
 
-/// <summary>An item with the direction steps leading to it, as served by the API.</summary>
-public sealed record ItemDto(string Name, IReadOnlyList<string> Directions);
+/// <summary>
+/// An item as served by the API. Directions are null (and omitted from JSON) when the
+/// caller asked for the names-only projection.
+/// </summary>
+public sealed record ItemDto(string Name, IReadOnlyList<string>? Directions);
