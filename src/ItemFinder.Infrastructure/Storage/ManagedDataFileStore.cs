@@ -8,13 +8,16 @@ namespace ItemFinder.Infrastructure.Storage;
 /// <summary>
 /// File-system store for the managed data file. Replaces are parse-gated and written
 /// atomically (temp file + move); the parsed directory is cached and swapped under a
-/// lock, so readers always see a directory matching the stored content.
+/// lock, so readers always see a directory matching the stored content. A deletion
+/// leaves a tombstone marker so the seed is not restored on the next start — both
+/// uploads and deletions survive restarts.
 /// </summary>
 public sealed class ManagedDataFileStore : IManagedDataFileStore
 {
     private readonly object _sync = new();
     private readonly IDataFileParser _parser;
     private readonly string _storagePath;
+    private readonly string _tombstonePath;
     private ItemDirectory? _directory;
 
     public ManagedDataFileStore(DataFileOptions options, IDataFileParser parser)
@@ -25,6 +28,7 @@ public sealed class ManagedDataFileStore : IManagedDataFileStore
 
         _parser = parser;
         _storagePath = options.StoragePath;
+        _tombstonePath = options.StoragePath + ".deleted";
 
         var storageDirectory = Path.GetDirectoryName(_storagePath);
         if (!string.IsNullOrEmpty(storageDirectory))
@@ -34,9 +38,14 @@ public sealed class ManagedDataFileStore : IManagedDataFileStore
 
         if (File.Exists(_storagePath))
         {
+            // A stale tombstone can remain if a replace was interrupted after the
+            // write; the stored file is authoritative.
+            File.Delete(_tombstonePath);
             LoadExistingFile();
         }
-        else if (options.SeedPath is { Length: > 0 } seedPath && File.Exists(seedPath))
+        else if (!File.Exists(_tombstonePath)
+            && options.SeedPath is { Length: > 0 } seedPath
+            && File.Exists(seedPath))
         {
             Replace(File.ReadAllText(seedPath));
         }
@@ -79,6 +88,7 @@ public sealed class ManagedDataFileStore : IManagedDataFileStore
             var tempPath = _storagePath + ".tmp";
             File.WriteAllText(tempPath, content);
             File.Move(tempPath, _storagePath, overwrite: true);
+            File.Delete(_tombstonePath);
 
             _directory = directory;
             return DataFileReplaceResult.Ok(createdNew, directory.Items.Count);
@@ -94,6 +104,7 @@ public sealed class ManagedDataFileStore : IManagedDataFileStore
                 File.Delete(_storagePath);
             }
 
+            File.WriteAllText(_tombstonePath, string.Empty);
             _directory = null;
         }
     }

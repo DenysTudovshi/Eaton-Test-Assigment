@@ -105,6 +105,32 @@ public sealed class ManagedDataFileStoreTests : IDisposable
     }
 
     [Fact]
+    public void Delete_SurvivesRestart_WithoutReseeding()
+    {
+        var firstRun = CreateStore(seedPath: FixturePath("Data.txt"));
+        firstRun.Delete();
+
+        var secondRun = CreateStore(seedPath: FixturePath("Data.txt"));
+
+        Assert.Null(secondRun.ReadContent());
+        Assert.Null(secondRun.CurrentDirectory);
+    }
+
+    [Fact]
+    public void Replace_AfterDelete_SurvivesRestart()
+    {
+        var firstRun = CreateStore(seedPath: FixturePath("Data.txt"));
+        firstRun.Delete();
+        firstRun.Replace(OneItemContent);
+
+        var secondRun = CreateStore(seedPath: FixturePath("Data.txt"));
+
+        Assert.Equal(OneItemContent, secondRun.ReadContent());
+        Assert.NotNull(secondRun.CurrentDirectory);
+        Assert.Single(secondRun.CurrentDirectory.Items);
+    }
+
+    [Fact]
     public void Replace_ParsesOncePerReplace_NotPerRead()
     {
         var parser = new CountingParser();
