@@ -79,6 +79,17 @@ public sealed class SecurityHardeningTests
     }
 
     [Fact]
+    public async Task TokenIssuance_PersistsDataProtectionKeys_ToTheConfiguredDirectory()
+    {
+        using var factory = new ApiTestFactory();
+        using var client = await ApiClients.CreateAdminClient(factory);
+
+        var keysPath = Path.Combine(AppContext.BaseDirectory, "App_Data", "keys");
+        Assert.True(Directory.Exists(keysPath), "the key directory should exist");
+        Assert.NotEmpty(Directory.EnumerateFiles(keysPath, "*.xml"));
+    }
+
+    [Fact]
     public async Task Login_AfterRepeatedFailures_LocksOutEvenWithCorrectPassword()
     {
         using var factory = new ApiTestFactory();

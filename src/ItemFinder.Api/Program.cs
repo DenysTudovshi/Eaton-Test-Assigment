@@ -15,6 +15,7 @@ using ItemFinder.Infrastructure.Storage;
 
 using MediatR;
 
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -87,6 +88,14 @@ builder.Services.AddDbContext<ApiDbContext>((provider, options) =>
     Directory.CreateDirectory(Path.GetDirectoryName(identityDbPath)!);
     options.UseSqlite($"Data Source={identityDbPath}");
 });
+
+// Bearer tokens are encrypted with these keys; keeping them under App_Data (the
+// Docker volume) lets tokens survive container recreation instead of dying with it.
+var dataProtectionKeysPath = Path.GetFullPath(
+    builder.Configuration["DataProtection:KeysPath"] ?? "App_Data/keys", AppContext.BaseDirectory);
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<ApiUser>()
