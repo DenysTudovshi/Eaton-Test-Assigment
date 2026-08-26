@@ -1,5 +1,7 @@
 # Item Finder
 
+[![CI](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml/badge.svg)](https://github.com/DenysTudovshi/Eaton-Test-Assigment/actions/workflows/ci.yml)
+
 A console application that reads a data file describing where items are located,
 lists the items it finds, and prints step-by-step directions to whichever item you
 pick.
@@ -166,19 +168,21 @@ ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' \
 docker compose up --build
 ```
 
-serves the API on http://localhost:5054/swagger. A named volume keeps the
-uploaded data file and the user database across container recreation. The image
-can also be built directly: `docker build -f Dockerfile.api -t item-finder-api .`
-(the console `Dockerfile` is separate and unchanged).
+serves the API on http://localhost:5054/swagger. A named volume keeps the state
+across container recreation: the uploaded data file (a deletion sticks too — the
+store stays empty until the next upload), the user database, and the token
+signing keys, so existing logins keep working after the container is rebuilt.
+The image can also be built directly:
+`docker build -f Dockerfile.api -t item-finder-api .` (the console `Dockerfile`
+is separate and unchanged).
 
-Deployment notes, honestly stated for this demo setup:
+Before deploying to production:
 
 - The container speaks plain HTTP; terminate TLS in front of it.
 - The login rate limiter keys on the direct peer address. Behind a proxy or load
   balancer, configure forwarded headers first or every client shares one bucket.
-- Bearer tokens are protected with data-protection keys that live inside the
-  container, so recreating the container invalidates existing tokens — log in
-  again.
+- Run without the volume and tokens, users, and data-file changes all reset with
+  the container.
 
 ## The data file
 
