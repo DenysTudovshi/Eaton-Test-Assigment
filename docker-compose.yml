@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: item-finder-api
+    ports:
+      - "5054:8080"
+    environment:
+      # Without these the API still serves the public item endpoints,
+      # but no admin exists and the data-file endpoints stay unusable.
+      ITEMFINDER_ADMIN_EMAIL: ${ITEMFINDER_ADMIN_EMAIL:-}
+      ITEMFINDER_ADMIN_PASSWORD: ${ITEMFINDER_ADMIN_PASSWORD:-}
+    volumes:
+      # Persists the uploaded data file and the user database across container recreation.
+      - itemfinder-data:/app/App_Data
+
+volumes:
+  itemfinder-data:

@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /source
+COPY Directory.Build.props .editorconfig ./
+COPY src/ ./src/
+COPY data/ ./data/
+RUN dotnet publish src/ItemFinder.Api -c Release -o /app /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app .
+# Pre-create the writable state directory so the non-root user owns it,
+# including when a volume is mounted there.
+RUN mkdir App_Data && chown app App_Data
+USER app
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "ItemFinder.Api.dll"]
