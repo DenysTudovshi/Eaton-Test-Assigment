@@ -22,8 +22,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
-const string identityRateLimitPolicy = "identity";
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -106,7 +104,7 @@ builder.Services.AddIdentityApiEndpoints<ApiUser>()
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddPolicy(identityRateLimitPolicy, context =>
+    options.AddPolicy(RateLimitPolicies.Identity, context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
@@ -136,9 +134,7 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapIdentityEndpoints(identityRateLimitPolicy);
-app.MapItemEndpoints();
-app.MapDataFileEndpoints();
+app.MapEndpoints();
 
 await app.RunAsync();
 

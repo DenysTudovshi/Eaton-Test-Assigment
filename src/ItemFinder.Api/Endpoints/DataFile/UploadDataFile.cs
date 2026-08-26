@@ -1,37 +1,23 @@
 using System.Text;
 
-using ItemFinder.Api.Identity;
-using ItemFinder.Application.Commands.DeleteDataFile;
 using ItemFinder.Application.Commands.ReplaceDataFile;
 using ItemFinder.Application.Dtos;
 using ItemFinder.Application.Options;
-using ItemFinder.Application.Queries.GetDataFile;
 
 using MediatR;
 
 using Microsoft.Extensions.Options;
 
-namespace ItemFinder.Api.Endpoints;
+namespace ItemFinder.Api.Endpoints.DataFile;
 
 /// <summary>
-/// The managed data file as a singleton resource, restricted to the Admin role.
-/// PUT is an idempotent replace; DELETE succeeds even when nothing is stored.
+/// Upload a replacement data file. The grammar parser gates the content before anything
+/// is stored; PUT answers 201 the first time and 200 on replacement.
 /// </summary>
-public static class DataFileEndpoints
+public sealed class UploadDataFile : IEndpoint
 {
-    public static IEndpointRouteBuilder MapDataFileEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup(ApiRoutes.DataFile)
-            .WithTags("Data file")
-            .RequireAuthorization(policy => policy.RequireRole(IdentitySeeder.AdminRole));
-
-        group.MapGet("/", GetDataFile)
-            .WithName("DownloadDataFile")
-            .WithSummary("Download the current data file.")
-            .Produces(StatusCodes.Status200OK, contentType: "text/plain")
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        group.MapPut("/", ReplaceDataFile)
+    public static void Map(IEndpointRouteBuilder app) =>
+        app.MapPut("/", Handle)
             .WithName("ReplaceDataFile")
             .WithSummary("Upload a data file, replacing the current one after grammar validation.")
             // Clients authenticate with bearer tokens, not cookies, so CSRF does not apply to this form post.
@@ -41,23 +27,7 @@ public static class DataFileEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        group.MapDelete("/", DeleteDataFile)
-            .WithName("DeleteDataFile")
-            .WithSummary("Remove the data file; idempotent.")
-            .Produces(StatusCodes.Status204NoContent);
-
-        return app;
-    }
-
-    private static async Task<IResult> GetDataFile(ISender sender, CancellationToken cancellationToken)
-    {
-        var content = await sender.Send(new GetDataFileQuery(), cancellationToken);
-        return content is null
-            ? TypedResults.Problem(title: "No data file is stored.", statusCode: StatusCodes.Status404NotFound)
-            : TypedResults.Text(content, "text/plain", Encoding.UTF8);
-    }
-
-    private static async Task<IResult> ReplaceDataFile(
+    private static async Task<IResult> Handle(
         IFormFile? file,
         ISender sender,
         IOptions<DataFileOptions> dataFileOptions,
@@ -114,11 +84,5 @@ public static class DataFileEndpoints
         return result.CreatedNew
             ? TypedResults.Created(ApiRoutes.DataFile, response)
             : TypedResults.Ok(response);
-    }
-
-    private static async Task<IResult> DeleteDataFile(ISender sender, CancellationToken cancellationToken)
-    {
-        await sender.Send(new DeleteDataFileCommand(), cancellationToken);
-        return TypedResults.NoContent();
     }
 }
