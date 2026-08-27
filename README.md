@@ -128,6 +128,19 @@ Design notes:
 
 Requires Docker (Docker Desktop on Windows/macOS).
 
+CI publishes ready-made images to GitHub Container Registry on every green build
+of `main`, so both apps also run without cloning the repo:
+
+```
+docker run -it --rm ghcr.io/denystudovshi/item-finder:latest
+```
+
+```
+docker run -p 5054:8080 -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' ghcr.io/denystudovshi/item-finder-api:latest
+```
+
+The sections below build the same images from source.
+
 ### Console app
 
 ```
