@@ -56,3 +56,6 @@ appsettings.*.local.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local environment files carry credentials (compose admin login); never commit them.
+.env

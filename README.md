@@ -168,6 +168,17 @@ ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' \
 docker compose up --build
 ```
 
+Instead of typing credentials inline (they end up in shell history), put them in
+a `.env` file next to `docker-compose.yml` — Compose loads it automatically, and
+git ignores it:
+
+```
+ITEMFINDER_ADMIN_EMAIL=admin@example.com
+ITEMFINDER_ADMIN_PASSWORD=ChangeMe!123
+```
+
+then plain `docker compose up --build` is enough.
+
 serves the API on http://localhost:5054/swagger. A named volume keeps the state
 across container recreation: the uploaded data file (a deletion sticks too — the
 store stays empty until the next upload), the user database, and the token
