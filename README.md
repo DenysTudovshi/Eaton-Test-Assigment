@@ -46,18 +46,18 @@ docker run -it --rm item-finder
 
 Use `-it` so the app can read your input.
 
-To run against your own data file, mount it into the container and point the app
-at the mounted copy. `{file path}` is the file on your machine — absolute, or
-relative to the directory you run the command from:
+To run against your own data file, mount it over the bundled default — the app
+then picks it up automatically. `{file path}` is the file on your machine,
+absolute or relative to the directory you run the command from:
 
 ```
-docker run -it --rm -v "{file path}:/data/Data.txt:ro" item-finder /data/Data.txt
+docker run -it --rm -v "{file path}:/app/Data.txt:ro" item-finder
 ```
 
 For example, the bundled nine-item sample:
 
 ```
-docker run -it --rm -v "./data/Data-medium.txt:/data/Data.txt:ro" item-finder /data/Data.txt
+docker run -it --rm -v "./data/Data-medium.txt:/app/Data.txt:ro" item-finder
 ```
 
 ### Web API
