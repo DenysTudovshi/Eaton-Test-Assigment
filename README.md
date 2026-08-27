@@ -48,16 +48,12 @@ Use `-it` so the app can read your input.
 
 To run against your own data file, mount it over the bundled default — the app
 then picks it up automatically. `{file path}` is the file on your machine,
-absolute or relative to the directory you run the command from:
+absolute or relative to the directory you run the command from; the rest is
+literal (`/app/Data.txt` is where the app looks inside the container, `ro`
+mounts your file read-only):
 
 ```
 docker run -it --rm -v "{file path}:/app/Data.txt:ro" item-finder
-```
-
-For example, the bundled nine-item sample:
-
-```
-docker run -it --rm -v "./data/Data-medium.txt:/app/Data.txt:ro" item-finder
 ```
 
 ### Web API
