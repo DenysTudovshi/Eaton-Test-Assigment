@@ -33,30 +33,41 @@ prompt quits.
 A companion [Web API](#web-api) serves the same item directory over HTTP and lets
 an administrator download, replace, or delete the data file.
 
-## Quick start
+## Run locally
 
-Requires the .NET 8 SDK.
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+
+### Console app
 
 ```
 dotnet run --project src/ItemFinder.ConsoleApp
 ```
 
-The bundled `Data.txt` is used by default. To use another file, pass its path:
+The bundled `Data.txt` is used by default. Point it at another file with an
+argument (`-- path/to/MyData.txt`) or the `ITEMFINDER_DATA_FILE` environment
+variable; the argument wins when both are given.
+
+### Web API
 
 ```
-dotnet run --project src/ItemFinder.ConsoleApp -- path/to/MyData.txt
+dotnet user-secrets set ITEMFINDER_ADMIN_EMAIL admin@example.com --project src/ItemFinder.Api
+dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD 'ChangeMe!123' --project src/ItemFinder.Api
+dotnet run --project src/ItemFinder.Api
 ```
 
-The `ITEMFINDER_DATA_FILE` environment variable also sets the path; a CLI
-argument wins over it when both are given.
+Swagger UI: http://localhost:5054/swagger. The two secrets seed the admin account
+on first start and are optional — without them the API still serves the public
+item endpoints, but nobody can manage the data file.
 
-Run the tests:
+### Tests
 
 ```
 dotnet test
 ```
 
-## Docker
+## Run in Docker
+
+### Console app
 
 ```
 docker build -t item-finder .
@@ -64,28 +75,37 @@ docker run -it --rm item-finder
 ```
 
 Use `-it` so the app can read your input. To run against a different data file,
-mount it and pass its path:
+mount it and pass its path (or set `ITEMFINDER_DATA_FILE` to it):
 
 ```
 docker run -it --rm -v "$(pwd)/data:/data:ro" item-finder /data/Data-medium.txt
 ```
 
-or point the environment variable at it:
+### Web API
+
+Put the admin credentials in a `.env` file next to `docker-compose.yml`
+(git-ignored, loaded by Compose automatically):
 
 ```
-docker run -it --rm -v "$(pwd)/data:/data:ro" -e ITEMFINDER_DATA_FILE=/data/Data-medium.txt item-finder
+ITEMFINDER_ADMIN_EMAIL=admin@example.com
+ITEMFINDER_ADMIN_PASSWORD=ChangeMe!123
 ```
+
+then:
+
+```
+docker compose up --build
+```
+
+Swagger UI: http://localhost:5054/swagger. A named volume keeps the state across
+container recreation: the data file (deletions stick too), the user database, and
+the token signing keys, so existing logins keep working after a rebuild.
+`docker compose down` stops the API and keeps that state; `docker compose down -v`
+resets everything. The image can also be built standalone:
+`docker build -f Dockerfile.api -t item-finder-api .` (the console `Dockerfile`
+is separate and unchanged).
 
 ## Web API
-
-`ItemFinder.Api` is a minimal API over the same core, with interactive
-documentation via Swagger UI:
-
-```
-dotnet run --project src/ItemFinder.Api
-```
-
-then open http://localhost:5054/swagger.
 
 | Method | Route | Auth | Description |
 |---|---|---|---|
@@ -93,40 +113,13 @@ then open http://localhost:5054/swagger.
 | GET | `/api/v1/items/{name}` | — | One item by exact, case-insensitive name; 404 if absent |
 | POST | `/api/v1/identity/register` · `/login` | — | Account registration and login — the entire identity surface; login returns the bearer token |
 | GET | `/api/v1/data-file` | Admin | Download the current data file |
-| PUT | `/api/v1/data-file` | Admin | Upload a replacement (multipart `file` field); 201 on first upload, 200 on replace |
-| DELETE | `/api/v1/data-file` | Admin | Remove the data file; idempotent 204 |
+| PUT | `/api/v1/data-file` | Admin | Upload a replacement (multipart `file` field); validated against the grammar before it replaces anything |
+| DELETE | `/api/v1/data-file` | Admin | Remove the data file; idempotent |
 
-Errors are RFC 7807 problem details throughout: `401` without a token, `403`
-authenticated without the role, `400` with per-field messages for invalid input.
-
-Two conveniences on the item list mirror how the console app is used:
-
-```
-curl "http://localhost:5054/api/v1/items?fields=name"
-# the console-style suggestion list - names only, alphabetical
-
-curl "http://localhost:5054/api/v1/items?name=Coffee%20Mug&name=Pencils"
-# directions for several items in one request; a name that matches nothing
-# simply contributes nothing (use /api/v1/items/{name} for a per-name 404)
-```
-
-The `name` filter is exact (case-insensitive) and mutually exclusive with
-`search`; both combine with `fields=name` and paging.
-
-### Authentication and the admin account
+### Authentication
 
 Anyone may register and log in, but the data-file endpoints require the `Admin`
-role, which only the account seeded at startup holds — registration never grants
-it. Configure the admin before starting, via user secrets:
-
-```
-dotnet user-secrets set ITEMFINDER_ADMIN_EMAIL admin@example.com --project src/ItemFinder.Api
-dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD 'ChangeMe!123' --project src/ItemFinder.Api
-```
-
-or the environment variables of the same names. Without them the API still serves
-the public endpoints and logs a warning; the data-file endpoints just have no one
-who can use them.
+role, which only the seeded admin account holds — registration never grants it.
 
 ```
 curl -X POST http://localhost:5054/api/v1/identity/login \
@@ -145,47 +138,8 @@ protected endpoints from the browser.
 
 Register and login are deliberately the only identity endpoints — there is no
 refresh, password reset, or profile management. Tokens expire after an hour;
-log in again to get a new one.
-
-### Upload validation
-
-An uploaded file is checked against the same grammar the console app uses
-*before* anything is stored. A file that fails gets `422` with every error's
-kind, 1-based line number, and message — and the previous file stays in place
-untouched. Only `.txt` files up to 1 MB are accepted (`400` otherwise, checked
-before parsing). An accepted upload is parsed once, atomically swapped in, and
-visible on `GET /api/v1/items` immediately. After a delete, the item list is
-empty and `GET /api/v1/data-file` returns 404 until the next upload.
-
-Login endpoints are rate-limited (10 requests per minute per client address) and
-accounts lock temporarily after repeated failed passwords.
-
-### Web API in Docker
-
-```
-ITEMFINDER_ADMIN_EMAIL=admin@example.com \
-ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' \
-docker compose up --build
-```
-
-Instead of typing credentials inline (they end up in shell history), put them in
-a `.env` file next to `docker-compose.yml` — Compose loads it automatically, and
-git ignores it:
-
-```
-ITEMFINDER_ADMIN_EMAIL=admin@example.com
-ITEMFINDER_ADMIN_PASSWORD=ChangeMe!123
-```
-
-then plain `docker compose up --build` is enough.
-
-serves the API on http://localhost:5054/swagger. A named volume keeps the state
-across container recreation: the uploaded data file (a deletion sticks too — the
-store stays empty until the next upload), the user database, and the token
-signing keys, so existing logins keep working after the container is rebuilt.
-The image can also be built directly:
-`docker build -f Dockerfile.api -t item-finder-api .` (the console `Dockerfile`
-is separate and unchanged).
+log in again to get a new one. Login endpoints are rate-limited and accounts
+lock temporarily after repeated failed passwords.
 
 Before deploying to production:
 
