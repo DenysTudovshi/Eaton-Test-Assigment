@@ -33,6 +33,93 @@ prompt quits.
 A companion [Web API](#web-api) serves the same item directory over HTTP and lets
 an administrator download, replace, or delete the data file.
 
+## Web API
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/api/v1/items?search=&name=&fields=&page=&pageSize=` | — | Items with their directions, alphabetical; case-insensitive substring search and paging; repeated `name` params fetch several items' directions in one request; `fields=name` returns just the names |
+| GET | `/api/v1/items/{name}` | — | One item by exact, case-insensitive name; 404 if absent |
+| POST | `/api/v1/identity/register` · `/login` | — | Account registration and login — the entire identity surface; login returns the bearer token |
+| GET | `/api/v1/data-file` | Admin | Download the current data file |
+| PUT | `/api/v1/data-file` | Admin | Upload a replacement (multipart `file` field); validated against the grammar before it replaces anything |
+| DELETE | `/api/v1/data-file` | Admin | Remove the data file; idempotent |
+
+### Authentication
+
+Anyone may register and log in, but the data-file endpoints require the `Admin`
+role, held only by the admin account seeded at startup — registration never
+grants it. Log in for a bearer token; in Swagger UI, paste the `accessToken`
+into the **Authorize** dialog:
+
+```
+curl -X POST http://localhost:5054/api/v1/identity/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"ChangeMe!123"}'
+# → {"tokenType":"Bearer","accessToken":"...", "expiresIn":3600, ...}
+```
+
+Register and login are the only identity endpoints; tokens expire after an hour.
+Logins are rate-limited and accounts lock temporarily after repeated failures.
+
+## The data file
+
+Directions and items form a hierarchy drawn with text characters:
+
+```
++ Walk to the end of the hall.
+├──+ Turn left.
+|  └──+ Go through the first door on the right.
+|     ├──+ Open the cabinet on the left.
+|     |  └── Item: Cookies
+```
+
+- A line starting with `+ ` is a root direction; nested lines add `|  ` or three
+  spaces per level before a `├──`/`└──` branch.
+- `+ ` after the branch marks a further direction; ` Item: ` marks an item.
+- Items are always leaves, and each item name is unique.
+
+Invalid files — blank lines, skipped levels, entries nested under an item,
+duplicate item names, or lines that fit no known shape — are rejected with a
+message naming the offending line. A missing or unreadable file gets a clear
+message too, and the app exits with a non-zero code.
+
+Two sample files live in [`data/`](data/): the small one above and a nine-item
+building layout ([`Data-medium.txt`](data/Data-medium.txt)).
+
+## Architecture
+
+```
+ItemFinder.ConsoleApp ──┐
+                        ├──► ItemFinder.Application ◄── ItemFinder.Infrastructure
+ItemFinder.Api ─────────┘             │
+                                      ▼
+                             ItemFinder.Domain
+```
+
+| Project | Responsibility |
+|---|---|
+| `ItemFinder.Domain` | The direction tree: direction nodes, item leaves, and traversal that pairs every item with its chain of directions. No dependencies. |
+| `ItemFinder.Application` | Use cases over the tree — the alphabetical item list and per-item direction lookup — plus the parser contract (`IDataFileParser`) and its result types. |
+| `ItemFinder.Infrastructure` | The data file parser: grammar, structural validation, friendly line-numbered errors, file access. |
+| `ItemFinder.ConsoleApp` | The interactive flow and composition root. All console I/O sits behind an `IConsole` abstraction with the real adapter in one class. |
+| `ItemFinder.Api` | The HTTP presentation layer: minimal-API endpoints, Swagger, request validation (MediatR pipeline + FluentValidation), and ASP.NET Core Identity with users and roles in SQLite via EF Core. Identity and EF live only here — the core stays auth-free. |
+
+Dependencies point inward only, enforced through project references — which is
+exactly how the Web API was added: a second presentation project over the same
+`Application` layer, with the console app left untouched.
+
+Design notes:
+
+- Parsing problems are values, not exceptions: the parser returns either the tree
+  or a list of errors with line numbers, and only the console boundary decides
+  how to present them. A last-resort handler turns anything unexpected into a
+  single friendly message rather than a stack trace.
+- Item names are trimmed, and the parser accepts both LF and CRLF line endings
+  and an optional UTF-8 byte-order mark, so files behave the same across
+  platforms and editors.
+- Each layer is unit-tested against its boundary; the parser is additionally
+  tested against both sample files and a fixture per validation rule.
+
 ## Run in Docker
 
 Requires Docker (Docker Desktop on Windows/macOS).
@@ -112,41 +199,7 @@ item endpoints, but nobody can manage the data file.
 dotnet test
 ```
 
-## Web API
-
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| GET | `/api/v1/items?search=&name=&fields=&page=&pageSize=` | — | Items with their directions, alphabetical; case-insensitive substring search and paging; repeated `name` params fetch several items' directions in one request; `fields=name` returns just the names |
-| GET | `/api/v1/items/{name}` | — | One item by exact, case-insensitive name; 404 if absent |
-| POST | `/api/v1/identity/register` · `/login` | — | Account registration and login — the entire identity surface; login returns the bearer token |
-| GET | `/api/v1/data-file` | Admin | Download the current data file |
-| PUT | `/api/v1/data-file` | Admin | Upload a replacement (multipart `file` field); validated against the grammar before it replaces anything |
-| DELETE | `/api/v1/data-file` | Admin | Remove the data file; idempotent |
-
-### Authentication
-
-Anyone may register and log in, but the data-file endpoints require the `Admin`
-role, which only the seeded admin account holds — registration never grants it.
-
-```
-curl -X POST http://localhost:5054/api/v1/identity/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"ChangeMe!123"}'
-# → {"tokenType":"Bearer","accessToken":"...", "expiresIn":3600, ...}
-
-curl -X PUT http://localhost:5054/api/v1/data-file \
-  -H "Authorization: Bearer <accessToken>" \
-  -F "file=@data/Data-medium.txt;type=text/plain"
-# → {"itemCount":9}
-```
-
-In Swagger UI, paste the `accessToken` into the **Authorize** dialog to call the
-protected endpoints from the browser.
-
-Register and login are deliberately the only identity endpoints — there is no
-refresh, password reset, or profile management. Tokens expire after an hour;
-log in again to get a new one. Login endpoints are rate-limited and accounts
-lock temporarily after repeated failed passwords.
+## Pre-release notes
 
 Before deploying to production:
 
@@ -155,62 +208,3 @@ Before deploying to production:
   balancer, configure forwarded headers first or every client shares one bucket.
 - Run without the volume and tokens, users, and data-file changes all reset with
   the container.
-
-## The data file
-
-Directions and items form a hierarchy drawn with text characters:
-
-```
-+ Walk to the end of the hall.
-├──+ Turn left.
-|  └──+ Go through the first door on the right.
-|     ├──+ Open the cabinet on the left.
-|     |  └── Item: Cookies
-```
-
-- A line starting with `+ ` is a root direction; nested lines add `|  ` or three
-  spaces per level before a `├──`/`└──` branch.
-- `+ ` after the branch marks a further direction; ` Item: ` marks an item.
-- Items are always leaves, and each item name is unique.
-
-Invalid files — blank lines, skipped levels, entries nested under an item,
-duplicate item names, or lines that fit no known shape — are rejected with a
-message naming the offending line. A missing or unreadable file gets a clear
-message too, and the app exits with a non-zero code.
-
-Two sample files live in [`data/`](data/): the small one above and a nine-item
-building layout ([`Data-medium.txt`](data/Data-medium.txt)).
-
-## Architecture
-
-```
-ItemFinder.ConsoleApp ──┐
-                        ├──► ItemFinder.Application ◄── ItemFinder.Infrastructure
-ItemFinder.Api ─────────┘             │
-                                      ▼
-                             ItemFinder.Domain
-```
-
-| Project | Responsibility |
-|---|---|
-| `ItemFinder.Domain` | The direction tree: direction nodes, item leaves, and traversal that pairs every item with its chain of directions. No dependencies. |
-| `ItemFinder.Application` | Use cases over the tree — the alphabetical item list and per-item direction lookup — plus the parser contract (`IDataFileParser`) and its result types. |
-| `ItemFinder.Infrastructure` | The data file parser: grammar, structural validation, friendly line-numbered errors, file access. |
-| `ItemFinder.ConsoleApp` | The interactive flow and composition root. All console I/O sits behind an `IConsole` abstraction with the real adapter in one class. |
-| `ItemFinder.Api` | The HTTP presentation layer: minimal-API endpoints, Swagger, request validation (MediatR pipeline + FluentValidation), and ASP.NET Core Identity with users and roles in SQLite via EF Core. Identity and EF live only here — the core stays auth-free. |
-
-Dependencies point inward only, enforced through project references — which is
-exactly how the Web API was added: a second presentation project over the same
-`Application` layer, with the console app left untouched.
-
-Design notes:
-
-- Parsing problems are values, not exceptions: the parser returns either the tree
-  or a list of errors with line numbers, and only the console boundary decides
-  how to present them. A last-resort handler turns anything unexpected into a
-  single friendly message rather than a stack trace.
-- Item names are trimmed, and the parser accepts both LF and CRLF line endings
-  and an optional UTF-8 byte-order mark, so files behave the same across
-  platforms and editors.
-- Each layer is unit-tested against its boundary; the parser is additionally
-  tested against both sample files and a fixture per validation rule.
