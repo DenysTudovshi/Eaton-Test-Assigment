@@ -54,7 +54,7 @@ into the **Authorize** dialog:
 ```
 curl -X POST http://localhost:5054/api/v1/identity/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"ChangeMe!123"}'
+  -d '{"email":"admin@example.com","password":"ChangeMe#123"}'
 # → {"tokenType":"Bearer","accessToken":"...", "expiresIn":3600, ...}
 ```
 
@@ -145,11 +145,15 @@ docker run -it --rm -v "{file path}:/app/Data.txt:ro" ghcr.io/denystudovshi/item
 Web API (pick the admin credentials as you start it):
 
 ```
-docker run -p 5054:8080 -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' ghcr.io/denystudovshi/item-finder-api:latest
+docker run -p 5054:8080 -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD=ChangeMe#123 ghcr.io/denystudovshi/item-finder-api:latest
 ```
 
 then open http://localhost:5054/swagger. `latest` tracks `main`; every commit is
 also published under an immutable `sha-<commit>` tag.
+
+Careful with shell quoting around your own password: cmd.exe treats single
+quotes as literal characters, so `'Secret!'` would seed the password *with* the
+quotes. Prefer a password that needs no quoting, or quote per your shell.
 
 ## Run in Docker
 
@@ -182,7 +186,7 @@ Put the admin credentials in a `.env` file next to `docker-compose.yml`
 
 ```
 ITEMFINDER_ADMIN_EMAIL=admin@example.com
-ITEMFINDER_ADMIN_PASSWORD=ChangeMe!123
+ITEMFINDER_ADMIN_PASSWORD=ChangeMe#123
 ```
 
 then:
@@ -217,7 +221,7 @@ environment variable; the argument wins when both are given.
 
 ```
 dotnet user-secrets set ITEMFINDER_ADMIN_EMAIL admin@example.com --project src/ItemFinder.Api
-dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD 'ChangeMe!123' --project src/ItemFinder.Api
+dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD ChangeMe#123 --project src/ItemFinder.Api
 dotnet run --project src/ItemFinder.Api
 ```
 
