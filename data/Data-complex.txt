@@ -1,0 +1,57 @@
++ Enter the main office.
+├──+ Go to the reception desk.
+|  ├── Item: Visitor Badge
+|  └──+ Open the top drawer.
+|     └── Item: Spare Keys
+├──+ Walk down the east corridor.
+|  ├──+ Enter the meeting room.
+|  |  ├──+ Check the cabinet by the window.
+|  |  |  ├── Item: Projector Remote
+|  |  |  └── Item: Whiteboard Markers
+|  |  └── Item: Conference Phone
+|  └──+ Enter the kitchen.
+|     ├──+ Open the pantry.
+|     |  └──+ Look behind the cereal boxes.
+|     |     └── Item: Espresso Pods
+|     └── Item: Paper Towels
+└──+ Take the stairs to the second floor.
+   ├──+ Enter the server room.
+   |  ├──+ Open the network rack.
+   |  |  └──+ Slide out the bottom tray.
+   |  |     └── Item: Patch Cables
+   |  └── Item: Rack Screwdriver
+   └──+ Walk to the storage closet at the end.
+      └──+ Check the top shelf.
+         └── Item: Extension Cord
++ Enter the warehouse.
+├──+ Walk to aisle three.
+|  ├──+ Climb the rolling ladder.
+|  |  └──+ Check the highest bin.
+|  |     └──+ Reach behind the divider.
+|  |        └── Item: Sealing Tape
+|  └── Item: Pallet Jack Handle
+├──+ Walk past the loading dock.
+|  └──+ Look inside the empty crate.
+├──+ Enter the tool cage.
+|  ├── Item: Torque Wrench
+|  ├──+ Open the wall cabinet.
+|  |  ├── Item: Safety Goggles
+|  |  └──+ Check the bottom drawer.
+|  |     └── Item: Utility Knife
+|  └── Item: Work Lamp
+└── Item: Forklift Key
++ Enter the annex through the side door.
+├──+ Go down to the basement.
+|  ├──+ Follow the corridor to the boiler room.
+|  |  └──+ Look behind the boiler.
+|  |     └──+ Open the recessed panel.
+|  |        └──+ Check the small alcove.
+|  |           └── Item: Stopcock Key
+|  └──+ Enter the archive room.
+|     ├──+ Open the filing cabinet marked 'Q-T'.
+|     |  └── Item: Quarterly Reports
+|     └── Item: Records Ledger
+└──+ Climb to the attic.
+   ├── Item: Spare Fuses
+   └──+ Crawl under the eaves.
+      └── Item: Rooftop Antenna Manual

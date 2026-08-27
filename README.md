@@ -83,8 +83,10 @@ duplicate item names, or lines that fit no known shape — are rejected with a
 message naming the offending line. A missing or unreadable file gets a clear
 message too, and the app exits with a non-zero code.
 
-Two sample files live in [`data/`](data/): the small one above and a nine-item
-building layout ([`Data-medium.txt`](data/Data-medium.txt)).
+Three sample files live in [`data/`](data/): the small one above, a nine-item
+building layout ([`Data-medium.txt`](data/Data-medium.txt)), and a 22-item site
+spanning three buildings with nesting six levels deep
+([`Data-complex.txt`](data/Data-complex.txt)).
 
 ## Architecture
 
