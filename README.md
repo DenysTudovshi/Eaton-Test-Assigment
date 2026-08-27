@@ -142,14 +142,18 @@ the file on your machine, absolute or relative; the rest is literal):
 docker run -it --rm -v "{file path}:/app/Data.txt:ro" ghcr.io/denystudovshi/item-finder:latest
 ```
 
-Web API (pick the admin credentials as you start it):
+Web API — the named volume keeps the data file, users, and logins across runs;
+the credentials seed the admin on the very first start and are ignored once it
+exists:
 
 ```
-docker run -p 5054:8080 -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD=ChangeMe#123 ghcr.io/denystudovshi/item-finder-api:latest
+docker run --rm -p 5054:8080 -v itemfinder-data:/app/App_Data -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD=ChangeMe#123 ghcr.io/denystudovshi/item-finder-api:latest
 ```
 
-then open http://localhost:5054/swagger. `latest` tracks `main`; every commit is
-also published under an immutable `sha-<commit>` tag.
+then open http://localhost:5054/swagger. Stop it and run the same command again
+to continue where you left off; `docker volume rm itemfinder-data` starts over.
+`latest` tracks `main`; every commit is also published under an immutable
+`sha-<commit>` tag.
 
 Careful with shell quoting around your own password: cmd.exe treats single
 quotes as literal characters, so `'Secret!'` would seed the password *with* the
