@@ -125,8 +125,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSwagger();
-// Keeps the pasted bearer token across page reloads, so authorizing is a once-per-token affair.
-app.UseSwaggerUI(options => options.EnablePersistAuthorization());
+// No persistAuthorization: it survives in browser storage across backend rebuilds and
+// makes a fresh run look authorized. A clean unauthorized start beats saving a paste.
+app.UseSwaggerUI();
 
 app.MapEndpoints();
 
