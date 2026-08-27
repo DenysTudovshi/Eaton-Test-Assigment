@@ -135,6 +135,13 @@ Console app:
 docker run -it --rm ghcr.io/denystudovshi/item-finder:latest
 ```
 
+or with your own data file mounted over the bundled default (`{file path}` is
+the file on your machine, absolute or relative; the rest is literal):
+
+```
+docker run -it --rm -v "{file path}:/app/Data.txt:ro" ghcr.io/denystudovshi/item-finder:latest
+```
+
 Web API (pick the admin credentials as you start it):
 
 ```
