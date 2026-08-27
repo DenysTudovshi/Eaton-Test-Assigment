@@ -33,39 +33,9 @@ prompt quits.
 A companion [Web API](#web-api) serves the same item directory over HTTP and lets
 an administrator download, replace, or delete the data file.
 
-## Run locally
-
-Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
-
-### Console app
-
-```
-dotnet run --project src/ItemFinder.ConsoleApp
-```
-
-The bundled `Data.txt` is used by default. Point it at another file with an
-argument (`-- path/to/MyData.txt`) or the `ITEMFINDER_DATA_FILE` environment
-variable; the argument wins when both are given.
-
-### Web API
-
-```
-dotnet user-secrets set ITEMFINDER_ADMIN_EMAIL admin@example.com --project src/ItemFinder.Api
-dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD 'ChangeMe!123' --project src/ItemFinder.Api
-dotnet run --project src/ItemFinder.Api
-```
-
-Swagger UI: http://localhost:5054/swagger. The two secrets seed the admin account
-on first start and are optional — without them the API still serves the public
-item endpoints, but nobody can manage the data file.
-
-### Tests
-
-```
-dotnet test
-```
-
 ## Run in Docker
+
+Requires Docker (Docker Desktop on Windows/macOS).
 
 ### Console app
 
@@ -74,11 +44,20 @@ docker build -t item-finder .
 docker run -it --rm item-finder
 ```
 
-Use `-it` so the app can read your input. To run against a different data file,
-mount it and pass its path (or set `ITEMFINDER_DATA_FILE` to it):
+Use `-it` so the app can read your input.
+
+To run against your own data file, mount it into the container and point the app
+at the mounted copy. `{file path}` is the file on your machine — absolute, or
+relative to the directory you run the command from:
 
 ```
-docker run -it --rm -v "$(pwd)/data:/data:ro" item-finder /data/Data-medium.txt
+docker run -it --rm -v "{file path}:/data/Data.txt:ro" item-finder /data/Data.txt
+```
+
+For example, the bundled nine-item sample:
+
+```
+docker run -it --rm -v "./data/Data-medium.txt:/data/Data.txt:ro" item-finder /data/Data.txt
 ```
 
 ### Web API
@@ -104,6 +83,38 @@ the token signing keys, so existing logins keep working after a rebuild.
 resets everything. The image can also be built standalone:
 `docker build -f Dockerfile.api -t item-finder-api .` (the console `Dockerfile`
 is separate and unchanged).
+
+## Run locally
+
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+
+### Console app
+
+```
+dotnet run --project src/ItemFinder.ConsoleApp
+```
+
+The bundled `Data.txt` is used by default. Point it at another file with an
+argument (`-- {file path}`, absolute or relative) or the `ITEMFINDER_DATA_FILE`
+environment variable; the argument wins when both are given.
+
+### Web API
+
+```
+dotnet user-secrets set ITEMFINDER_ADMIN_EMAIL admin@example.com --project src/ItemFinder.Api
+dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD 'ChangeMe!123' --project src/ItemFinder.Api
+dotnet run --project src/ItemFinder.Api
+```
+
+Swagger UI: http://localhost:5054/swagger. The two secrets seed the admin account
+on first start and are optional — without them the API still serves the public
+item endpoints, but nobody can manage the data file.
+
+### Tests
+
+```
+dotnet test
+```
 
 ## Web API
 
