@@ -124,6 +124,91 @@ public sealed class IdentityEndpointsTests : IClassFixture<ApiTestFactory>
         Assert.Null(await userManager.FindByEmailAsync(ApiTestFactory.AdminEmail));
     }
 
+    [Fact]
+    public async Task AdminPassword_RotatesToTheConfiguredValue_OnEachStart()
+    {
+        var stateRoot = ApiTestFactory.NewStateRoot();
+        try
+        {
+            using (var firstRun = ApiTestFactory.WithState(stateRoot, "rotate@test.local", "First#Pass1"))
+            using (var firstClient = firstRun.CreateClient())
+            {
+                Assert.Equal(HttpStatusCode.OK, await Login(firstClient, "rotate@test.local", "First#Pass1"));
+            }
+
+            using var secondRun = ApiTestFactory.WithState(stateRoot, "rotate@test.local", "Second#Pass2");
+            using var secondClient = secondRun.CreateClient();
+
+            Assert.Equal(HttpStatusCode.OK, await Login(secondClient, "rotate@test.local", "Second#Pass2"));
+            Assert.Equal(
+                HttpStatusCode.Unauthorized, await Login(secondClient, "rotate@test.local", "First#Pass1"));
+        }
+        finally
+        {
+            DeleteStateRoot(stateRoot);
+        }
+    }
+
+    [Fact]
+    public async Task ConfiguredAccount_IsTheOnlyAdmin_APreviousAdminIsDemoted()
+    {
+        var stateRoot = ApiTestFactory.NewStateRoot();
+        try
+        {
+            using (var firstRun = ApiTestFactory.WithState(stateRoot, "first-admin@test.local", "First#Pass1"))
+            using (var firstClient = firstRun.CreateClient())
+            {
+                Assert.Equal(HttpStatusCode.OK, await Login(firstClient, "first-admin@test.local", "First#Pass1"));
+            }
+
+            using var secondRun = ApiTestFactory.WithState(stateRoot, "second-admin@test.local", "Second#Pass2");
+
+            using var currentAdmin = await GetDataFileAs(secondRun, "second-admin@test.local", "Second#Pass2");
+            Assert.Equal(HttpStatusCode.OK, currentAdmin.StatusCode);
+
+            using var previousAdmin = await GetDataFileAs(secondRun, "first-admin@test.local", "First#Pass1");
+            Assert.Equal(HttpStatusCode.Forbidden, previousAdmin.StatusCode);
+        }
+        finally
+        {
+            DeleteStateRoot(stateRoot);
+        }
+    }
+
+    private static async Task<HttpStatusCode> Login(HttpClient client, string email, string password)
+    {
+        using var response = await client.PostAsJsonAsync("/api/v1/identity/login", new { email, password });
+        return response.StatusCode;
+    }
+
+    private static async Task<HttpResponseMessage> GetDataFileAs(
+        ApiTestFactory factory, string email, string password)
+    {
+        using var client = factory.CreateClient();
+        using var login = await client.PostAsJsonAsync("/api/v1/identity/login", new { email, password });
+        using var body = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        var token = body.RootElement.GetProperty("accessToken").GetString();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get, new Uri("/api/v1/data-file", UriKind.Relative));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await client.SendAsync(request);
+    }
+
+    private static void DeleteStateRoot(string stateRoot)
+    {
+        try
+        {
+            Directory.Delete(stateRoot, recursive: true);
+        }
+        catch (DirectoryNotFoundException)
+        {
+        }
+        catch (IOException)
+        {
+        }
+    }
+
     private static async Task<string> RegisterAndLogin(HttpClient client, string email)
     {
         var credentials = new { email, password = "User!Passw0rd" };

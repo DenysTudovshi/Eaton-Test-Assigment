@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Identity;
 namespace ItemFinder.Api.Identity;
 
 /// <summary>
-/// Creates the Admin role and one admin account from configuration at startup.
-/// Registration is open to everyone, so administration rights come only from this
-/// seeded account — never from self-service signup.
+/// Makes the identity state match the configuration on every start: the configured
+/// account exists with exactly the configured password (rotated when it changed), and
+/// it is the only holder of the Admin role — a previously configured admin is demoted
+/// to a plain user. Registration is open to everyone, so administration rights come
+/// only from this configuration — never from self-service signup.
 /// </summary>
 internal static partial class IdentitySeeder
 {
@@ -42,8 +44,20 @@ internal static partial class IdentitySeeder
             var created = await userManager.CreateAsync(admin, password);
             if (!created.Succeeded)
             {
-                LogAdminCreateFailed(logger, string.Join("; ", created.Errors.Select(error => error.Description)));
+                LogAdminCreateFailed(logger, Describe(created));
                 return;
+            }
+        }
+        else if (!await userManager.CheckPasswordAsync(admin, password))
+        {
+            // The configured credentials are authoritative: rotate the stored password
+            // to match them. The reset token path validates the new password before
+            // anything changes, so a rejected value leaves the old password intact.
+            var resetToken = await userManager.GeneratePasswordResetTokenAsync(admin);
+            var reset = await userManager.ResetPasswordAsync(admin, resetToken, password);
+            if (!reset.Succeeded)
+            {
+                LogAdminPasswordRotationFailed(logger, Describe(reset));
             }
         }
 
@@ -51,7 +65,19 @@ internal static partial class IdentitySeeder
         {
             await userManager.AddToRoleAsync(admin, AdminRole);
         }
+
+        foreach (var other in await userManager.GetUsersInRoleAsync(AdminRole))
+        {
+            if (other.Id != admin.Id)
+            {
+                await userManager.RemoveFromRoleAsync(other, AdminRole);
+                LogDemotedPreviousAdmin(logger, other.Email ?? other.Id);
+            }
+        }
     }
+
+    private static string Describe(IdentityResult result) =>
+        string.Join("; ", result.Errors.Select(error => error.Description));
 
     [LoggerMessage(
         Level = LogLevel.Warning,
@@ -60,4 +86,14 @@ internal static partial class IdentitySeeder
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Admin account could not be created: {Errors}")]
     private static partial void LogAdminCreateFailed(ILogger logger, string errors);
+
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Admin password could not be rotated to the configured value: {Errors}")]
+    private static partial void LogAdminPasswordRotationFailed(ILogger logger, string errors);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Demoted previous admin {Email}: only the configured account holds the Admin role.")]
+    private static partial void LogDemotedPreviousAdmin(ILogger logger, string email);
 }

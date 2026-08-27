@@ -142,9 +142,10 @@ the file on your machine, absolute or relative; the rest is literal):
 docker run -it --rm -v "{file path}:/app/Data.txt:ro" ghcr.io/denystudovshi/item-finder:latest
 ```
 
-Web API — the named volume keeps the data file, users, and logins across runs;
-the credentials seed the admin on the very first start and are ignored once it
-exists:
+Web API — the named volume keeps the data file, users, and logins across runs.
+The credentials are applied on every start: the first run creates the admin,
+later runs rotate its password to match, and the configured account is always
+the one and only admin:
 
 ```
 docker run --rm -p 5054:8080 -v itemfinder-data:/app/App_Data -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD=ChangeMe#123 ghcr.io/denystudovshi/item-finder-api:latest
@@ -229,9 +230,10 @@ dotnet user-secrets set ITEMFINDER_ADMIN_PASSWORD ChangeMe#123 --project src/Ite
 dotnet run --project src/ItemFinder.Api
 ```
 
-Swagger UI: http://localhost:5054/swagger. The two secrets seed the admin account
-on first start and are optional — without them the API still serves the public
-item endpoints, but nobody can manage the data file.
+Swagger UI: http://localhost:5054/swagger. The two secrets are applied at every
+start — the admin account is created on the first run and its password follows
+them afterwards — and they are optional: without them the API still serves the
+public item endpoints, but nobody can manage the data file.
 
 ### Tests
 
