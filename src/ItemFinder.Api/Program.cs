@@ -6,6 +6,7 @@ using ItemFinder.Api;
 using ItemFinder.Api.Endpoints;
 using ItemFinder.Api.ExceptionHandling;
 using ItemFinder.Api.Identity;
+using ItemFinder.Api.OpenApi;
 using ItemFinder.Application.Behaviors;
 using ItemFinder.Application.Interfaces;
 using ItemFinder.Application.Options;
@@ -36,16 +37,8 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Paste the accessToken returned by the identity login endpoint.",
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
-            },
-            Array.Empty<string>()
-        },
-    });
+    // Applied per operation, so the padlock appears only on endpoints that require it.
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
 builder.Services.AddProblemDetails();
