@@ -124,22 +124,30 @@ Design notes:
 - Each layer is unit-tested against its boundary; the parser is additionally
   tested against both sample files and a fixture per validation rule.
 
-## Run in Docker
+## Run from the published images
 
-Requires Docker (Docker Desktop on Windows/macOS).
+Every green build of `main` publishes both apps to GitHub Container Registry, so
+the only prerequisite is Docker — no clone, no SDK, no build.
 
-CI publishes ready-made images to GitHub Container Registry on every green build
-of `main`, so both apps also run without cloning the repo:
+Console app:
 
 ```
 docker run -it --rm ghcr.io/denystudovshi/item-finder:latest
 ```
 
+Web API (pick the admin credentials as you start it):
+
 ```
 docker run -p 5054:8080 -e ITEMFINDER_ADMIN_EMAIL=admin@example.com -e ITEMFINDER_ADMIN_PASSWORD='ChangeMe!123' ghcr.io/denystudovshi/item-finder-api:latest
 ```
 
-The sections below build the same images from source.
+then open http://localhost:5054/swagger. `latest` tracks `main`; every commit is
+also published under an immutable `sha-<commit>` tag.
+
+## Run in Docker
+
+Requires Docker (Docker Desktop on Windows/macOS). This builds the images from
+source; the [published images](#run-from-the-published-images) above skip the build.
 
 ### Console app
 
