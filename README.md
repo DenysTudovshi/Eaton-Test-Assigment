@@ -104,9 +104,11 @@ ItemFinder.Api ─────────┘             │
 | `ItemFinder.ConsoleApp` | The interactive flow and composition root. All console I/O sits behind an `IConsole` abstraction with the real adapter in one class. |
 | `ItemFinder.Api` | The HTTP presentation layer: minimal-API endpoints, Swagger, request validation (MediatR pipeline + FluentValidation), and ASP.NET Core Identity with users and roles in SQLite via EF Core. Identity and EF live only here — the core stays auth-free. |
 
-Dependencies point inward only, enforced through project references — which is
-exactly how the Web API was added: a second presentation project over the same
-`Application` layer, with the console app left untouched.
+The solution follows Clean Architecture: dependencies point inward only, and the
+rule is enforced through project references. The console app and the Web API are
+peer presentation layers over the same `Application` core — each can evolve or be
+replaced without touching the other or the domain logic, and a further front-end
+(desktop, say) would be one more project, not a rewrite.
 
 Design notes:
 
