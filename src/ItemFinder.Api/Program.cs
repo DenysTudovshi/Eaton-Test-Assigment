@@ -132,7 +132,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSwagger();
-app.UseSwaggerUI();
+// Keeps the pasted bearer token across page reloads, so authorizing is a once-per-token affair.
+app.UseSwaggerUI(options => options.EnablePersistAuthorization());
 
 app.MapEndpoints();
 
